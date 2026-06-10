@@ -1,9 +1,17 @@
 {% extends "front/base.html" %}
 {% from "front/_macros.html" import img, card %}
 
-{% block title %}{{ pick(page, 'title', lang) }} - {{ super() }}{% endblock %}
+{% block title %}{{ pick(page, 'seo_title', lang) or pick(page, 'title', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block seo %}
+{% if pick(page, 'seo_desc', lang) %}<meta name="description" content="{{ pick(page, 'seo_desc', lang) }}">{% endif %}
+{% if pick(page, 'seo_keywords', lang) %}<meta name="keywords" content="{{ pick(page, 'seo_keywords', lang) }}">{% endif %}
+{% endblock %}
 
 {% block content %}
+{% if crumbs %}
+<script type="application/ld+json">{{ breadcrumb_jsonld(crumbs) | safe }}</script>
+{% endif %}
 {% if page.hero_image %}
 <div class="hero hero--page">
   <img src="/uploads/{{ page.hero_image }}" alt="{{ pick(page, 'title', lang) }}" class="hero__img" loading="lazy">

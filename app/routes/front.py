@@ -12,8 +12,10 @@ pages_router = APIRouter()
 
 
 def render(request: Request, name: str, ctx: dict, db: Session, status_code: int = 200):
-    ctx.setdefault("lang", request.state.lang)
-    ctx.setdefault("path", request.scope["path"])
+    lang = getattr(request.state, "lang", "zh")
+    logical_path = request.scope["path"]
+    ctx.setdefault("lang", lang)
+    ctx.setdefault("path", logical_path)
     if "site" not in ctx:
         ctx["site"] = {row.key: row.value for row in db.query(Setting).all()}
     if "nav_pages" not in ctx:
@@ -28,6 +30,17 @@ def render(request: Request, name: str, ctx: dict, db: Session, status_code: int
             .order_by(ProductCategory.sort)
             .all()
         )
+    # SEO context
+    if "alternates" not in ctx:
+        from app.seo import alternates as _alternates, canonical_url as _canonical_url
+        base_url = request.app.state.settings.base_url
+        ctx["alternates"] = _alternates(base_url, logical_path)
+        ctx["canonical"] = _canonical_url(base_url, lang, logical_path)
+    # breadcrumb_jsonld helper available in templates
+    if "breadcrumb_jsonld" not in ctx:
+        from app.seo import breadcrumb_jsonld as _bj
+        base_url = request.app.state.settings.base_url
+        ctx["breadcrumb_jsonld"] = lambda crumbs: _bj(base_url, lang, crumbs)
     return request.app.state.templates.TemplateResponse(request, name, ctx, status_code=status_code)
 
 
@@ -311,6 +324,76 @@ def downloads_list(request: Request, db: Session = Depends(get_db)):
         cat_label = pick(item, "category", lang) or item.category_zh or "其他"
         groups.setdefault(cat_label, []).append(item)
     return render(request, "front/downloads.html", {"groups": groups}, db=db)
+
+
+# ---------------------------------------------------------------------------
+# SEO: sitemap.xml + robots.txt (Task 11)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/sitemap.xml")
+def sitemap(request: Request, db: Session = Depends(get_db)):
+    from app.i18n import LANGS, lang_url
+    from fastapi.responses import Response as PlainResp
+
+    base_url = request.app.state.settings.base_url
+    urls: list[dict] = []
+
+    def add_url(logical_path: str, lastmod: str = ""):
+        for lang in LANGS:
+            entry = {"loc": base_url + lang_url(lang, logical_path)}
+            if lastmod:
+                entry["lastmod"] = lastmod
+            urls.append(entry)
+
+    # Static / well-known paths
+    for path in ("/", "/news/", "/career/", "/downloads/", "/contact/", "/search/"):
+        add_url(path)
+
+    # Pages
+    for pg in db.query(Page).all():
+        add_url(page_url(db, pg))
+
+    # Product categories
+    for cat in db.query(ProductCategory).all():
+        add_url(cat_url_path(db, cat))
+
+    # Products
+    from app.models import Product as ProductModel
+    for prod in db.query(ProductModel).all():
+        prod_path = cat_url_by_id(db, prod.category_id) + f"{prod.slug}.html"
+        add_url(prod_path)
+
+    # Posts (published)
+    from app.models import Post as PostModel
+    for po in db.query(PostModel).filter_by(status="published").all():
+        lastmod = po.publish_at.strftime("%Y-%m-%d") if po.publish_at else ""
+        add_url(f"/news/{po.slug}.html", lastmod=lastmod)
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for entry in urls:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{entry['loc']}</loc>")
+        if entry.get("lastmod"):
+            lines.append(f"    <lastmod>{entry['lastmod']}</lastmod>")
+        lines.append("  </url>")
+    lines.append("</urlset>")
+    return PlainResp("\n".join(lines), media_type="application/xml")
+
+
+@router.get("/robots.txt")
+def robots(request: Request):
+    from fastapi.responses import Response as PlainResp
+
+    base_url = request.app.state.settings.base_url
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin/\n"
+        f"Sitemap: {base_url}/sitemap.xml\n"
+    )
+    return PlainResp(content, media_type="text/plain")
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site.get('site_name','Rollax') }}{% endblock %}</title>
+  {% if alternates %}
+  {% for hreflang, href in alternates %}
+  <link rel="alternate" hreflang="{{ hreflang }}" href="{{ href }}">
+  {% endfor %}
+  {% endif %}
+  {% if canonical %}
+  <link rel="canonical" href="{{ canonical }}">
+  {% endif %}
   {% block seo %}{% endblock %}
   <link rel="stylesheet" href="/static/css/site.css">
 </head>
