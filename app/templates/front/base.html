@@ -35,7 +35,16 @@
     </div>
   </div>
 </header>
-<div class="prodbar">{% block prodbar %}{% endblock %}</div>
+<div class="prodbar">
+  {% block prodbar %}
+  <nav class="prodbar__nav">
+    <a href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
+    {% for rc in root_categories %}
+    <a href="{{ lang_url(lang, '/products/' + rc.slug + '/') }}">{{ pick(rc, 'name', lang) }}</a>
+    {% endfor %}
+  </nav>
+  {% endblock %}
+</div>
 <main>{% block content %}{% endblock %}</main>
 <section class="newsletter">
   <div class="newsletter__inner">

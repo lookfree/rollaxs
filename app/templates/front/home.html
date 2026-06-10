@@ -7,4 +7,34 @@
     <p>{{ site.get('tagline', '') }}</p>
   </div>
 </section>
+
+{% if intro_page %}
+<section class="home-intro">
+  <div class="home-intro__inner">
+    <h2>{{ pick(intro_page, 'title', lang) }}</h2>
+    <div class="home-intro__body">{{ pick(intro_page, 'body', lang) | safe }}</div>
+  </div>
+</section>
+{% endif %}
+
+{% if root_categories %}
+<section class="home-cats">
+  <div class="home-cats__inner">
+    <h2>{{ t('nav.products', lang) }}</h2>
+    <div class="card-wall">
+      {% for cat in root_categories %}
+      <a class="card" href="{{ lang_url(lang, '/products/' + cat.slug + '/') }}">
+        {% if cat.card_image %}
+        <img src="/uploads/{{ cat.card_image }}" alt="{{ pick(cat, 'name', lang) }}" loading="lazy">
+        {% endif %}
+        <div class="card__body">
+          <h3>{{ pick(cat, 'name', lang) }}</h3>
+          <p>{{ pick(cat, 'intro', lang) }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 {% endblock %}

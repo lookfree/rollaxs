@@ -1,0 +1,43 @@
+{% extends "front/base.html" %}
+
+{% block title %}{{ pick(prod, 'name', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block content %}
+{% if prod.hero_image %}
+<div class="hero hero--prod">
+  <img src="/uploads/{{ prod.hero_image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
+</div>
+{% endif %}
+
+{% if crumbs %}
+<nav class="breadcrumb">
+  <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
+  <span class="sep">›</span>
+  <a href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
+  {% for name, url in crumbs %}
+  <span class="sep">›</span>
+  <a href="{{ lang_url(lang, url) }}">{{ name }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<div class="prod-layout">
+  <article class="prod-layout__main">
+    <h1>{{ pick(prod, 'name', lang) }}</h1>
+    <div class="prod-body">{{ pick(prod, 'body', lang) | safe }}</div>
+    <a class="btn-inquiry" href="{{ lang_url(lang, '/contact/?about=' + prod.slug) }}">
+      {{ t('btn.inquiry', lang) }}
+    </a>
+  </article>
+
+  <aside class="prod-layout__side">
+    {% if cat %}
+    <div class="prod-tree">
+      <h4>{{ pick(cat, 'name', lang) }}</h4>
+      {% set siblings = [] %}
+      {# tree is {parent_id: [cats]}, show siblings under same parent #}
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}
