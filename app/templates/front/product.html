@@ -31,13 +31,16 @@
   </article>
 
   <aside class="prod-layout__side">
-    {% if cat %}
     <div class="prod-tree">
-      <h4>{{ pick(cat, 'name', lang) }}</h4>
-      {% set siblings = [] %}
-      {# tree is {parent_id: [cats]}, show siblings under same parent #}
+      <h4>{{ t('nav.products', lang) }}</h4>
+      <ul>
+        {% for c, url, depth in side_tree %}
+        <li class="depth-{{ depth }}{{ ' on' if cat and c.id == cat.id }}">
+          <a href="{{ lang_url(lang, url) }}">{{ pick(c, 'name', lang) or c.slug }}</a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-    {% endif %}
   </aside>
 </div>
 {% endblock %}

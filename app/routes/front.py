@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.i18n import pick
@@ -94,10 +94,26 @@ def build_cat_crumbs(db: Session, cat: ProductCategory, lang: str) -> list:
             break
         current = db.query(ProductCategory).filter_by(id=current.parent_id).first()
     crumbs.reverse()
-    result = []
+    result, base = [], "/products/"
     for c in crumbs:
-        result.append((pick(c, "name", lang) or c.slug, cat_url_path(db, c)))
+        base = f"{base}{c.slug}/"
+        result.append((pick(c, "name", lang) or c.slug, base))
     return result
+
+
+def flatten_category_tree(db: Session) -> list:
+    """侧边产品树:[(cat, url, depth), ...] 先序遍历,URL 已拼好祖先路径。"""
+    tree = category_tree(db)
+    out = []
+
+    def walk(parent_id, base, depth):
+        for c in tree.get(parent_id, []):
+            url = f"{base}{c.slug}/"
+            out.append((c, url, depth))
+            walk(c.id, url, depth + 1)
+
+    walk(None, "/products/", 0)
+    return out
 
 
 def resolve_category_path(db: Session, path: str) -> ProductCategory:
@@ -142,7 +158,7 @@ def products_index(request: Request, db: Session = Depends(get_db)):
     return render(
         request,
         "front/category.html",
-        {"cat": None, "children": roots, "products": [], "tree": {}, "crumbs": [], "cat_url": "/products/"},
+        {"cat": None, "children": roots, "products": [], "crumbs": [], "cat_url": "/products/"},
         db=db,
     )
 
@@ -164,15 +180,15 @@ def product_detail(path: str, request: Request, db: Session = Depends(get_db)):
     if prod.category_id != resolved_cat.id:
         raise HTTPException(404)
     cat = resolved_cat
-    tree = category_tree(db)
     lang = request.state.lang
+    cat_url = "/products/" + "/".join(cat_segments) + "/"
     crumbs = build_cat_crumbs(db, cat, lang) + [
-        (pick(prod, "name", lang) or prod.slug, cat_url_path(db, cat) + f"{prod.slug}.html")
+        (pick(prod, "name", lang) or prod.slug, cat_url + f"{prod.slug}.html")
     ]
     return render(
         request,
         "front/product.html",
-        {"prod": prod, "cat": cat, "tree": tree, "crumbs": crumbs},
+        {"prod": prod, "cat": cat, "side_tree": flatten_category_tree(db), "crumbs": crumbs},
         db=db,
     )
 
@@ -200,9 +216,8 @@ def category_view(path: str, request: Request, db: Session = Depends(get_db)):
             "cat": cat,
             "children": children,
             "products": products,
-            "tree": category_tree(db),
             "crumbs": build_cat_crumbs(db, cat, lang),
-            "cat_url": cat_url_path(db, cat),
+            "cat_url": "/products/" + path.strip("/") + "/",
         },
         db=db,
     )
@@ -216,8 +231,7 @@ PAGE_SIZE = 10
 
 
 @router.get("/news/")
-def news_list(request: Request, page: int = 1, db: Session = Depends(get_db)):
-    from app.models import utcnow
+def news_list(request: Request, page: int = Query(default=1, ge=1), db: Session = Depends(get_db)):
     q = (
         db.query(Post)
         .filter(Post.status == "published", Post.publish_at <= utcnow())

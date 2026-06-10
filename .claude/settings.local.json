@@ -19,7 +19,9 @@
       "Bash(sed -n 1,30p app/main.py)",
       "Bash(git commit -q -m 'fix: 质量审查修复\\(utcnow 弃用/异常面/raw_path/argv 校验/唯一约束测试\\) *)",
       "Bash(git push *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(.venv/bin/python3 -c ' *)",
+      "Bash(.venv/bin/python3 *)"
     ]
   }
 }
