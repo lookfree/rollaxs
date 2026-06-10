@@ -27,6 +27,11 @@ UI = {
                    "de": "Seite nicht gefunden", "jp": "ページが見つかりません"},
     "label.500": {"zh": "服务器内部错误", "en": "Internal Server Error",
                    "de": "Interner Serverfehler", "jp": "サーバーエラー"},
+    "job.cat.social":   {"zh": "社会招聘", "en": "Social Hire", "de": "Direktbewerbung", "jp": "社会採用"},
+    "job.cat.student":  {"zh": "校园招聘", "en": "Campus Hire", "de": "Hochschulabsolventen", "jp": "学生採用"},
+    "job.cat.training": {"zh": "实习培训", "en": "Internship", "de": "Praktikum", "jp": "インターンシップ"},
+    "label.download_size": {"zh": "大小", "en": "Size", "de": "Größe", "jp": "サイズ"},
+    "label.download": {"zh": "下载", "en": "Download", "de": "Herunterladen", "jp": "ダウンロード"},
 }
 # 执行时按模板实际用到的词条继续补充 UI 字典,保持同结构。
 

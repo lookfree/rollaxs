@@ -1,0 +1,55 @@
+{% extends "front/base.html" %}
+
+{% block title %}{{ t('nav.downloads', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block content %}
+<section class="downloads-section">
+  <div class="downloads-section__inner">
+    <nav class="breadcrumb">
+      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
+      <span class="sep">›</span>
+      <span>{{ t('nav.downloads', lang) }}</span>
+    </nav>
+
+    <h1>{{ t('nav.downloads', lang) }}</h1>
+
+    {% for cat_label, items in groups.items() %}
+    <div class="dl-group">
+      <h2>{{ cat_label }}</h2>
+      <table class="dl-table">
+        <thead>
+          <tr>
+            <th>{{ pick({'title_zh': t('form.name', lang), 'title_en': t('form.name', lang), 'title_de': t('form.name', lang), 'title_jp': t('form.name', lang)}, 'title', lang) }}</th>
+            <th>{{ t('label.download_size', lang) }}</th>
+            <th>{{ t('label.download', lang) }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ pick(item, 'title', lang) }}</td>
+            <td>
+              {% if item.file_size %}
+                {% if item.file_size >= 1048576 %}
+                  {{ "%.1f MB" | format(item.file_size / 1048576) }}
+                {% else %}
+                  {{ "%.0f KB" | format(item.file_size / 1024) }}
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>
+              <a href="/uploads/{{ item.file_path }}" download>
+                {{ t('label.download', lang) }}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p>—</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

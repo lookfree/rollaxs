@@ -1,0 +1,35 @@
+{% extends "front/base.html" %}
+
+{% block title %}{{ t('nav.career', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block content %}
+<section class="career-section">
+  <div class="career-section__inner">
+    <nav class="breadcrumb">
+      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
+      <span class="sep">›</span>
+      <span>{{ t('nav.career', lang) }}</span>
+    </nav>
+
+    <h1>{{ t('nav.career', lang) }}</h1>
+
+    {% for cat_key in ['social', 'student', 'training'] %}
+    {% set job_list = groups.get(cat_key, []) %}
+    {% if job_list %}
+    <div class="career-group" id="cat-{{ cat_key }}">
+      <h2>{{ t('job.cat.' + cat_key, lang) }}</h2>
+      <ul class="job-list">
+        {% for job in job_list %}
+        <li class="job-item">
+          <a class="job-item__title" href="{{ lang_url(lang, '/career/' + job.id|string + '.html') }}">
+            {{ pick(job, 'title', lang) }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

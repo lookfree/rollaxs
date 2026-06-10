@@ -1,3 +1,19 @@
+from app.models import Job, Download
+
+
+def test_jobs_and_downloads(client, db):
+    db.add(Job(title_zh="数控工程师", body_zh="<p>职责</p>", category="social"))
+    db.add(Job(title_zh="已关闭岗位", status="closed"))
+    db.add(Download(title_zh="产品手册", category_zh="手册", file_path="2026/01/cat.pdf", file_size=1024))
+    db.commit()
+    r = client.get("/career/")
+    assert "数控工程师" in r.text and "已关闭岗位" not in r.text
+    job_id = db.query(Job).filter_by(title_zh="数控工程师").one().id
+    assert "职责" in client.get(f"/career/{job_id}.html").text
+    r = client.get("/downloads/")
+    assert "产品手册" in r.text and "/uploads/2026/01/cat.pdf" in r.text
+
+
 def test_home_renders(client):
     r = client.get("/")
     assert r.status_code == 200
