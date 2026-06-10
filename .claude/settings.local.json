@@ -3,7 +3,22 @@
     "allow": [
       "Bash(curl -sL --max-time 30 -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/125.0.0.0 Safari/537.36\" https://www.rollax.com/ -o /tmp/rollax.html)",
       "Bash(echo \"exit:$?\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/python *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(command -v python3.12 python3.11 python3.13 uv)",
+      "Bash(uv python *)",
+      "Bash(uv venv *)",
+      "Bash(uv pip *)",
+      "Bash(sed -n 1,12p app/security.py)",
+      "Bash(sed -n 1,30p app/main.py)",
+      "Bash(git commit -q -m 'fix: 质量审查修复\\(utcnow 弃用/异常面/raw_path/argv 校验/唯一约束测试\\) *)",
+      "Bash(git push *)"
     ]
   }
 }

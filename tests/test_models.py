@@ -18,3 +18,17 @@ def test_wal_mode(tmp_path):
     with engine.connect() as conn:
         from sqlalchemy import text
         assert conn.execute(text("PRAGMA journal_mode")).scalar() == "wal"
+
+def test_subscriber_email_unique(tmp_path):
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+    from app.models import Subscriber
+    engine = make_engine(tmp_path / "u.db")
+    init_db(engine)
+    Session = make_session_factory(engine)
+    with Session() as s:
+        s.add(Subscriber(email="a@b.com")); s.commit()
+    with Session() as s:
+        s.add(Subscriber(email="a@b.com"))
+        with pytest.raises(IntegrityError):
+            s.commit()

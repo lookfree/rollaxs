@@ -14,6 +14,7 @@ def create_app():
                 if path == f"/{code}" or path.startswith(f"/{code}/"):
                     lang = code
                     request.scope["path"] = path[len(code) + 1:] or "/"
+                    request.scope["raw_path"] = request.scope["path"].encode()
                     break
         request.state.lang = lang
         return await call_next(request)

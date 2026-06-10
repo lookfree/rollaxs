@@ -7,6 +7,8 @@ from app.models import AdminUser
 from app.security import hash_password
 
 def main():
+    if len(sys.argv) != 3:
+        sys.exit("用法: create_admin.py <用户名> <密码>")
     username, password = sys.argv[1], sys.argv[2]
     s = get_settings()
     engine = make_engine(s.db_path)

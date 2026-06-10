@@ -1,9 +1,13 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import String, Text, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
+
+def utcnow() -> datetime:
+    """Naive UTC now;库内时间统一用它(datetime.utcnow 在 3.12 已弃用)。"""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 S, T = String(500), Text  # 简写
 
@@ -80,7 +84,7 @@ class Post(Base, I18nSeo):
     slug: Mapped[str] = mapped_column(String(200), unique=True, index=True)
     cover: Mapped[str] = mapped_column(S, default="")
     status: Mapped[str] = mapped_column(String(20), default="draft")  # draft|published
-    publish_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    publish_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     title_zh: Mapped[str] = mapped_column(S, default="")
     title_en: Mapped[str] = mapped_column(S, default="")
     title_de: Mapped[str] = mapped_column(S, default="")
@@ -100,7 +104,7 @@ class Job(Base):
     category: Mapped[str] = mapped_column(String(20), default="social")  # social|student|training
     status: Mapped[str] = mapped_column(String(20), default="open")  # open|closed
     sort: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     title_zh: Mapped[str] = mapped_column(S, default="")
     title_en: Mapped[str] = mapped_column(S, default="")
     title_de: Mapped[str] = mapped_column(S, default="")
@@ -135,7 +139,7 @@ class Inquiry(Base):
     message: Mapped[str] = mapped_column(T, default="")
     source_path: Mapped[str] = mapped_column(S, default="")
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 class Subscriber(Base):
     __tablename__ = "subscribers"
@@ -144,7 +148,7 @@ class Subscriber(Base):
     first_name: Mapped[str] = mapped_column(S, default="")
     last_name: Mapped[str] = mapped_column(S, default="")
     email: Mapped[str] = mapped_column(S, unique=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 class Media(Base):
     __tablename__ = "media"
@@ -153,7 +157,7 @@ class Media(Base):
     kind: Mapped[str] = mapped_column(String(20))   # image|file
     thumb_path: Mapped[str] = mapped_column(S, default="")
     webp_path: Mapped[str] = mapped_column(S, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 class Setting(Base):
     __tablename__ = "settings"
