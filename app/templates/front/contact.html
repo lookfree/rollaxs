@@ -1,4 +1,5 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ t('nav.contact', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
@@ -7,10 +8,11 @@
 {% endblock %}
 
 {% block content %}
+{{ page_hero(t('nav.contact', lang)) }}
+{{ crumb_strip(lang, [], t('nav.contact', lang)) }}
+
 <section class="contact-section">
   <div class="container">
-    <h1>{{ t('nav.contact', lang) }}</h1>
-
     {% if success %}
     <p class="form-success">{{ t('msg.thanks', lang) }}</p>
     {% else %}
@@ -21,19 +23,19 @@
       <!-- honeypot -->
       <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
       <div class="form-group">
-        <label>{{ t('form.name', lang) }}</label>
+        <label>{{ t('form.name', lang) }} *</label>
         <input type="text" name="name" value="{{ form_data.get('name','') }}" required>
       </div>
       <div class="form-group">
-        <label>{{ t('form.email', lang) }}</label>
+        <label>{{ t('form.email', lang) }} *</label>
         <input type="email" name="email" value="{{ form_data.get('email','') }}" required>
       </div>
       <div class="form-group">
         <label>{{ t('form.company', lang) }}</label>
         <input type="text" name="company" value="{{ form_data.get('company','') }}">
       </div>
-      <div class="form-group">
-        <label>{{ t('form.message', lang) }}</label>
+      <div class="form-group form-group--full">
+        <label>{{ t('form.message', lang) }} *</label>
         <textarea name="message" rows="6" required>{{ form_data.get('message','') }}</textarea>
       </div>
       <button type="submit" class="btn btn--primary">{{ t('btn.send', lang) }}</button>

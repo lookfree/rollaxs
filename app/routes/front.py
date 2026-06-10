@@ -563,4 +563,24 @@ def page_view(path: str, request: Request, db: Session = Depends(get_db)):
         parent = node
     crumbs = build_page_crumbs(db, node, request.state.lang)
     children = db.query(Page).filter_by(parent_id=node.id).order_by(Page.sort).all()
-    return render(request, "front/page.html", {"page": node, "crumbs": crumbs, "children": children}, db=db)
+    # 右侧栏:根节点的下级页面列表(Task 18 视觉还原,rollax 内页二栏布局)
+    root_pg, seen = node, set()
+    while root_pg.parent_id is not None and root_pg.id not in seen:
+        seen.add(root_pg.id)
+        parent_pg = db.query(Page).filter_by(id=root_pg.parent_id).first()
+        if parent_pg is None:
+            break
+        root_pg = parent_pg
+    side_pages = db.query(Page).filter_by(parent_id=root_pg.id).order_by(Page.sort).all()
+    return render(
+        request,
+        "front/page.html",
+        {
+            "page": node,
+            "crumbs": crumbs,
+            "children": children,
+            "side_root": root_pg,
+            "side_pages": side_pages,
+        },
+        db=db,
+    )

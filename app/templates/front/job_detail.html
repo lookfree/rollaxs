@@ -1,26 +1,22 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ pick(job, 'title', lang) }} — {{ t('nav.career', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
+{{ page_hero(pick(job, 'title', lang)) }}
+{{ crumb_strip(lang, [(t('nav.career', lang), '/career/')], pick(job, 'title', lang)) }}
+
 <article class="job-detail">
   <div class="job-detail__inner">
-    <nav class="breadcrumb">
-      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
-      <span class="sep">›</span>
-      <a href="{{ lang_url(lang, '/career/') }}">{{ t('nav.career', lang) }}</a>
-      <span class="sep">›</span>
-      <span>{{ pick(job, 'title', lang) }}</span>
-    </nav>
-
-    <h1>{{ pick(job, 'title', lang) }}</h1>
+    <h1 class="inner-title">{{ pick(job, 'title', lang) }}</h1>
     <p class="job-detail__cat">{{ t('job.cat.' + job.category, lang) }}</p>
 
-    <div class="job-detail__body">
+    <div class="rich-text job-detail__body">
       {{ pick(job, 'body', lang) | safe }}
     </div>
 
-    <p><a href="{{ lang_url(lang, '/career/') }}">&larr; {{ t('nav.career', lang) }}</a></p>
+    <p class="job-detail__back"><a class="btn" href="{{ lang_url(lang, '/career/') }}">&larr; {{ t('nav.career', lang) }}</a></p>
   </div>
 </article>
 {% endblock %}

@@ -1,37 +1,27 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}
   {% if cat %}{{ pick(cat, 'name', lang) }} — {% endif %}{{ t('nav.products', lang) }} — {{ site.get('site_name','Rollax') }}
 {% endblock %}
 
 {% block content %}
-{% if cat and cat.hero_image %}
-<div class="hero hero--cat">
-  <img src="/uploads/{{ cat.hero_image }}" alt="{{ pick(cat, 'name', lang) }}" loading="lazy">
-</div>
+{% if cat %}
+{{ page_hero(pick(cat, 'name', lang), cat.hero_image) }}
+{% else %}
+{{ page_hero(t('nav.products', lang)) }}
 {% endif %}
 
 {% if crumbs %}
-<nav class="breadcrumb">
-  <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
-  <span class="sep">›</span>
-  <a href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
-  {% for name, url in crumbs %}
-  <span class="sep">›</span>
-  <a href="{{ lang_url(lang, url) }}">{{ name }}</a>
-  {% endfor %}
-</nav>
+{{ crumb_strip(lang, [(t('nav.products', lang), '/products/')] + crumbs[:-1], crumbs[-1][0]) }}
+{% else %}
+{{ crumb_strip(lang, [], t('nav.products', lang)) }}
 {% endif %}
 
 <section class="cat-section">
   <div class="cat-section__inner">
-    {% if cat %}
-    <h1>{{ pick(cat, 'name', lang) }}</h1>
-    {% if pick(cat, 'intro', lang) %}
+    {% if cat and pick(cat, 'intro', lang) %}
     <div class="cat-intro">{{ pick(cat, 'intro', lang) | safe }}</div>
-    {% endif %}
-    {% else %}
-    <h1>{{ t('nav.products', lang) }}</h1>
     {% endif %}
 
     {% if children %}
@@ -39,7 +29,9 @@
       {% for child in children %}
       <a class="card" href="{{ lang_url(lang, cat_url + child.slug + '/') }}">
         {% if child.card_image %}
-        <img src="/uploads/{{ child.card_image }}" alt="{{ pick(child, 'name', lang) }}" loading="lazy">
+        <div class="card__media">
+          <img src="/uploads/{{ child.card_image }}" alt="{{ pick(child, 'name', lang) }}" loading="lazy">
+        </div>
         {% endif %}
         <div class="card__body">
           <h3>{{ pick(child, 'name', lang) }}</h3>
@@ -54,7 +46,9 @@
       {% for prod in products %}
       <a class="prod-card" href="{{ lang_url(lang, cat_url + prod.slug + '.html') }}">
         {% if prod.image %}
-        <img src="/uploads/{{ prod.image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
+        <div class="prod-card__media">
+          <img src="/uploads/{{ prod.image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
+        </div>
         {% endif %}
         <div class="prod-card__body">
           <h3>{{ pick(prod, 'name', lang) }}</h3>

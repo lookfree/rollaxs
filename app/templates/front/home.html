@@ -1,10 +1,21 @@
 {% extends "front/base.html" %}
 
 {% block content %}
-<section class="hero">
+{% set hero_img = site.get('home_hero_image', '') %}
+{% set hero_video = site.get('home_hero_video', '') %}
+<section class="hero hero--home"{% if hero_video %} data-video="{{ hero_video }}"{% endif %}>
+  {% if hero_img %}
+  <img class="hero__bg" src="/uploads/{{ hero_img }}" alt="{{ site.get('site_name', 'Rollax') }}">
+  {% endif %}
+  <div class="hero__overlay"></div>
   <div class="hero__inner">
     <h1>{{ site.get('site_name', 'Rollax') }}</h1>
-    <p>{{ site.get('tagline', '') }}</p>
+    <p class="hero__tagline">{{ site.get('tagline', '') }}</p>
+    {% if hero_video %}
+    <button class="hero-play" type="button" aria-label="{{ t('label.play', lang) }}">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    {% endif %}
   </div>
 </section>
 
@@ -25,11 +36,13 @@
       {% for cat in root_categories %}
       <a class="card" href="{{ lang_url(lang, '/products/' + cat.slug + '/') }}">
         {% if cat.card_image %}
-        <img src="/uploads/{{ cat.card_image }}" alt="{{ pick(cat, 'name', lang) }}" loading="lazy">
+        <div class="card__media">
+          <img src="/uploads/{{ cat.card_image }}" alt="{{ pick(cat, 'name', lang) }}" loading="lazy">
+        </div>
         {% endif %}
         <div class="card__body">
           <h3>{{ pick(cat, 'name', lang) }}</h3>
-          <p>{{ pick(cat, 'intro', lang) }}</p>
+          {% if pick(cat, 'intro', lang) %}<p>{{ pick(cat, 'intro', lang) | striptags | truncate(120) }}</p>{% endif %}
         </div>
       </a>
       {% endfor %}

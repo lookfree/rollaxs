@@ -1,5 +1,5 @@
 {% extends "front/base.html" %}
-{% from "front/_macros.html" import img, card %}
+{% from "front/_macros.html" import img, card, page_hero, crumb_strip %}
 
 {% block title %}{{ pick(page, 'seo_title', lang) or pick(page, 'title', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
@@ -12,43 +12,54 @@
 {% if crumbs %}
 <script type="application/ld+json">{{ breadcrumb_jsonld(crumbs) | safe }}</script>
 {% endif %}
-{% if page.hero_image %}
-<div class="hero hero--page">
-  <img src="/uploads/{{ page.hero_image }}" alt="{{ pick(page, 'title', lang) }}" class="hero__img" loading="lazy">
-</div>
+
+{{ page_hero(pick(page, 'title', lang), page.hero_image) }}
+
+{% if crumbs %}
+{{ crumb_strip(lang, crumbs[:-1], crumbs[-1][0]) }}
 {% endif %}
 
-<div class="page-content">
-  <!-- Breadcrumbs -->
-  {% if crumbs %}
-  <nav class="breadcrumbs" aria-label="breadcrumb">
-    <span><a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a></span>
-    {% for crumb_title, crumb_url in crumbs %}
-    <span><a href="{{ lang_url(lang, crumb_url) }}">{{ crumb_title }}</a></span>
-    {% endfor %}
-  </nav>
-  {% endif %}
+<div class="inner-layout">
+  <div class="inner-layout__main page-content">
+    <h1 class="inner-title">{{ pick(page, 'title', lang) }}</h1>
 
-  <h1>{{ pick(page, 'title', lang) }}</h1>
-
-  <div class="page-body">
-    {{ pick(page, 'body', lang) | safe }}
-  </div>
-
-  <!-- Child pages as cards -->
-  {% if children %}
-  <div class="card-grid">
-    {% for child in children %}
-    <div class="card">
-      {% if child.hero_image %}
-      <img src="/uploads/{{ child.hero_image }}" alt="{{ pick(child, 'title', lang) }}" class="card__img" loading="lazy">
-      {% endif %}
-      <div class="card__body">
-        <h3><a href="{{ lang_url(lang, '/' + page.slug + '/' + child.slug + '/') }}">{{ pick(child, 'title', lang) }}</a></h3>
-      </div>
+    <div class="rich-text page-body">
+      {{ pick(page, 'body', lang) | safe }}
     </div>
-    {% endfor %}
+
+    <!-- Child pages as cards -->
+    {% if children %}
+    <div class="card-grid">
+      {% for child in children %}
+      <div class="card">
+        {% if child.hero_image %}
+        <div class="card__media">
+          <img src="/uploads/{{ child.hero_image }}" alt="{{ pick(child, 'title', lang) }}" class="card__img" loading="lazy">
+        </div>
+        {% endif %}
+        <div class="card__body">
+          <h3><a href="{{ lang_url(lang, '/' + page.slug + '/' + child.slug + '/') }}">{{ pick(child, 'title', lang) }}</a></h3>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
+
+  {% if side_pages %}
+  <aside class="inner-layout__side">
+    <div class="side-nav">
+      <h4><a href="{{ lang_url(lang, '/' + side_root.slug + '/') }}">{{ pick(side_root, 'title', lang) }}</a></h4>
+      <ul>
+        {% for sp in side_pages %}
+        <li class="{{ 'on' if sp.id == page.id }}">
+          <a href="{{ lang_url(lang, '/' + side_root.slug + '/' + sp.slug + '/') }}">{{ pick(sp, 'title', lang) }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <a class="btn side-cta" href="{{ lang_url(lang, '/contact/') }}">{{ t('nav.contact', lang) }}</a>
+  </aside>
   {% endif %}
 </div>
 {% endblock %}

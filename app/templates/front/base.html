@@ -21,14 +21,30 @@
   <link rel="stylesheet" href="/static/css/site.css">
 </head>
 <body>
+{# 法务页面不进顶栏导航,移到页脚底栏 #}
+{% set legal_slugs = ['imprint', 'privacy', 'terms', 'compliance'] %}
+{% set main_nav = nav_pages | rejectattr('slug', 'in', legal_slugs) | list %}
+{% set legal_nav = nav_pages | selectattr('slug', 'in', legal_slugs) | list %}
 <header class="topbar">
   <div class="topbar__inner">
-    <a class="topbar__logo" href="{{ lang_url(lang, '/') }}">{{ site.get('site_name','Rollax') }}</a>
+    <button class="nav-toggle" type="button" aria-label="{{ t('label.menu', lang) }}" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <nav class="topbar__nav">
-      <a href="{{ lang_url(lang, '/') }}">{{ t('nav.home', lang) }}</a>
-      {% for pg in nav_pages %}
-      <div class="nav-item">
-        <a href="{{ lang_url(lang, '/' + pg.slug + '/') }}">{{ pick(pg, 'title', lang) }}</a>
+      <a class="topbar__link{{ ' is-active' if path == '/' }}" href="{{ lang_url(lang, '/') }}">{{ t('nav.home', lang) }}</a>
+      <div class="nav-item{{ ' is-active' if path.startswith('/products/') }}">
+        <a class="topbar__link{{ ' is-active' if path.startswith('/products/') }}" href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
+        {% if root_categories %}
+        <div class="nav-dropdown">
+          {% for rc in root_categories %}
+          <a href="{{ lang_url(lang, '/products/' + rc.slug + '/') }}">{{ pick(rc, 'name', lang) }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% for pg in main_nav %}
+      <div class="nav-item{{ ' is-active' if path.startswith('/' + pg.slug + '/') }}">
+        <a class="topbar__link{{ ' is-active' if path.startswith('/' + pg.slug + '/') }}" href="{{ lang_url(lang, '/' + pg.slug + '/') }}">{{ pick(pg, 'title', lang) }}</a>
         {% if pg._children %}
         <div class="nav-dropdown">
           {% for child in pg._children %}
@@ -38,44 +54,135 @@
         {% endif %}
       </div>
       {% endfor %}
+      <a class="topbar__link{{ ' is-active' if path.startswith('/news/') }}" href="{{ lang_url(lang, '/news/') }}">{{ t('nav.news', lang) }}</a>
+      <a class="topbar__link{{ ' is-active' if path.startswith('/career/') }}" href="{{ lang_url(lang, '/career/') }}">{{ t('nav.career', lang) }}</a>
+      <a class="topbar__link{{ ' is-active' if path.startswith('/downloads/') }}" href="{{ lang_url(lang, '/downloads/') }}">{{ t('nav.downloads', lang) }}</a>
+      <a class="topbar__link{{ ' is-active' if path.startswith('/contact/') }}" href="{{ lang_url(lang, '/contact/') }}">{{ t('nav.contact', lang) }}</a>
     </nav>
     <div class="topbar__meta">
-      {% if site.get('phone') %}<a class="topbar__phone" href="tel:{{ site.get('phone','') }}">{{ site.get('phone','') }}</a>{% endif %}
-      <a class="search-ico" href="{{ lang_url(lang, '/search/') }}" aria-label="{{ t('label.search', lang) }}">&#128269;</a>
+      {% if site.get('phone') %}
+      <a class="topbar__phone" href="tel:{{ site.get('phone','') | replace(' ', '') }}">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
+        <span>{{ site.get('phone','') }}</span>
+      </a>
+      {% endif %}
+      <a class="search-ico" href="{{ lang_url(lang, '/search/') }}" aria-label="{{ t('label.search', lang) }}">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>
+      </a>
       <div class="lang-switcher">
-        {% for code in LANGS %}<a class="lang-link{% if code == lang %} lang-link--active{% endif %}" href="{{ lang_url(code, path) }}">{{ LANG_NAMES[code] }}</a>{% endfor %}
+        {% for code in LANGS %}<a class="lang-link{% if code == lang %} lang-link--active{% endif %}" href="{{ lang_url(code, path) }}" title="{{ LANG_NAMES[code] }}">{{ code | upper }}</a>{% endfor %}
       </div>
     </div>
   </div>
 </header>
+{% set sn = site.get('site_name', 'ROLLAX') %}
+{% set sn_parts = sn.split(' ', 1) %}
+{% set sn_word = sn_parts[0] %}
 <div class="prodbar">
-  {% block prodbar %}
-  <nav class="prodbar__nav">
-    <a href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
-    {% for rc in root_categories %}
-    <a href="{{ lang_url(lang, '/products/' + rc.slug + '/') }}">{{ pick(rc, 'name', lang) }}</a>
-    {% endfor %}
-  </nav>
-  {% endblock %}
+  <div class="prodbar__inner">
+    <a class="logo" href="{{ lang_url(lang, '/') }}">
+      <span class="logo__mark">
+        {%- if sn_word | length > 2 -%}
+        <span class="logo__dark">{{ sn_word[:-2] }}</span><span class="logo__blue">{{ sn_word[-2:] }}</span>
+        {%- else -%}
+        <span class="logo__dark">{{ sn_word }}</span>
+        {%- endif -%}
+        <sup class="logo__reg">&reg;</sup>
+      </span>
+      <span class="logo__sub">{{ sn_parts[1] if sn_parts | length > 1 else site.get('tagline','') }}</span>
+    </a>
+    {% block prodbar %}
+    <nav class="prodbar__nav">
+      {% for rc in root_categories %}
+      <a class="{{ 'is-active' if path.startswith('/products/' + rc.slug + '/') }}" href="{{ lang_url(lang, '/products/' + rc.slug + '/') }}">{{ pick(rc, 'name', lang) }}</a>
+      {% endfor %}
+    </nav>
+    {% endblock %}
+  </div>
 </div>
 <main>{% block content %}{% endblock %}</main>
 <section class="newsletter">
   <div class="newsletter__inner">
-    <h3>{{ t('newsletter.title', lang) }}</h3>
+    <div class="newsletter__text">
+      <h3>{{ t('newsletter.title', lang) }}</h3>
+      <p>{{ t('newsletter.desc', lang) }}</p>
+    </div>
     <form method="post" action="{{ lang_url(lang, '/newsletter/') }}">
-      <input type="text" name="salutation" placeholder="Salutation">
+      <select name="salutation" aria-label="{{ t('form.salutation', lang) }}">
+        <option value="">{{ t('form.salutation', lang) }}</option>
+        <option value="mr">{{ t('salutation.mr', lang) }}</option>
+        <option value="ms">{{ t('salutation.ms', lang) }}</option>
+      </select>
       <input type="text" name="first_name" placeholder="{{ t('form.name', lang) }}">
       <input type="text" name="last_name" placeholder="">
       <input type="email" name="email" placeholder="{{ t('form.email', lang) }}" required>
       <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
-      <button type="submit">{{ t('btn.subscribe', lang) }}</button>
+      <button type="submit" class="btn">{{ t('btn.subscribe', lang) }}</button>
     </form>
   </div>
 </section>
 <footer class="footer">
-  <div class="footer__inner">
-    <p>{{ site.get('footer_text', '') }}</p>
-    <p>{{ site.get('copyright', '') }}</p>
+  <div class="footer__cols">
+    <div class="footer__col footer__col--contact">
+      <h4>{{ t('footer.contact', lang) }}</h4>
+      <address>
+        <p class="footer__sitename">{{ sn }}</p>
+        {% if site.get('address') %}
+        <p class="footer__row">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+          <span>{{ site.get('address','') }}</span>
+        </p>
+        {% endif %}
+        {% if site.get('phone') %}
+        <p class="footer__row">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
+          <a href="tel:{{ site.get('phone','') | replace(' ', '') }}">{{ site.get('phone','') }}</a>
+        </p>
+        {% endif %}
+        {% if site.get('email') %}
+        <p class="footer__row">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          <a href="mailto:{{ site.get('email','') }}">{{ site.get('email','') }}</a>
+        </p>
+        {% endif %}
+      </address>
+    </div>
+    <div class="footer__col footer__col--social">
+      <h4>{{ t('footer.social', lang) }}</h4>
+      <div class="social-links">
+        {% if site.get('social_linkedin') %}<a class="social-link" href="{{ site.get('social_linkedin') }}" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>{% endif %}
+        {% if site.get('social_instagram') %}<a class="social-link" href="{{ site.get('social_instagram') }}" target="_blank" rel="noopener" aria-label="Instagram">IG</a>{% endif %}
+        {% if site.get('social_xing') %}<a class="social-link" href="{{ site.get('social_xing') }}" target="_blank" rel="noopener" aria-label="Xing">X</a>{% endif %}
+        {% if site.get('email') %}<a class="social-link" href="mailto:{{ site.get('email','') }}" aria-label="E-Mail">@</a>{% endif %}
+      </div>
+    </div>
+    <div class="footer__col footer__col--map">
+      <h4>{{ t('footer.worldwide', lang) }}</h4>
+      <svg class="footer__globe" viewBox="0 0 120 120" width="110" height="110" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="60" cy="60" r="50"/>
+        <ellipse cx="60" cy="60" rx="22" ry="50"/>
+        <line x1="10" y1="60" x2="110" y2="60"/>
+        <path d="M17 35 Q60 50 103 35"/>
+        <path d="M17 85 Q60 70 103 85"/>
+        <circle cx="44" cy="44" r="3.5" fill="currentColor" stroke="none"/>
+        <circle cx="78" cy="52" r="3.5" fill="currentColor" stroke="none"/>
+        <circle cx="62" cy="78" r="3.5" fill="currentColor" stroke="none"/>
+      </svg>
+      <a class="btn btn--ghost" href="{{ lang_url(lang, '/company/locations/') }}">{{ t('btn.locations', lang) }}</a>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <button class="back-to-top" type="button" aria-label="{{ t('label.backtotop', lang) }}">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="5 14 12 7 19 14"/></svg>
+    </button>
+    <div class="footer__bottom-inner">
+      <p>{{ site.get('copyright', '') }}{% if site.get('footer_text') %} · {{ site.get('footer_text', '') }}{% endif %}</p>
+      <nav class="footer__legal">
+        {% for pg in legal_nav %}
+        <a href="{{ lang_url(lang, '/' + pg.slug + '/') }}">{{ pick(pg, 'title', lang) or pg.slug }}</a>
+        {% endfor %}
+      </nav>
+    </div>
   </div>
 </footer>
 <script src="/static/js/site.js" defer></script>

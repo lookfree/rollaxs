@@ -1,12 +1,14 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ t('nav.news', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
+{{ page_hero(t('nav.news', lang)) }}
+{{ crumb_strip(lang, [], t('nav.news', lang)) }}
+
 <section class="news-section">
   <div class="news-section__inner">
-    <h1>{{ t('nav.news', lang) }}</h1>
-
     <div class="post-list">
       {% for post in posts %}
       <article class="post-card">
@@ -17,11 +19,11 @@
         {% endif %}
         <div class="post-card__body">
           <h2><a href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">{{ pick(post, 'title', lang) }}</a></h2>
-          <p class="post-card__date">{{ post.publish_at.strftime('%Y-%m-%d') if post.publish_at else '' }}</p>
           {% if pick(post, 'excerpt', lang) %}
           <p class="post-card__excerpt">{{ pick(post, 'excerpt', lang) }}</p>
           {% endif %}
-          <a class="btn-readmore" href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">
+          <p class="post-card__date">{{ post.publish_at.strftime('%Y-%m-%d') if post.publish_at else '' }}</p>
+          <a class="btn btn-readmore" href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">
             {{ t('btn.readmore', lang) }}
           </a>
         </div>

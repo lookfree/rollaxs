@@ -1,18 +1,14 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ t('nav.career', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
+{{ page_hero(t('nav.career', lang)) }}
+{{ crumb_strip(lang, [], t('nav.career', lang)) }}
+
 <section class="career-section">
   <div class="career-section__inner">
-    <nav class="breadcrumb">
-      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
-      <span class="sep">›</span>
-      <span>{{ t('nav.career', lang) }}</span>
-    </nav>
-
-    <h1>{{ t('nav.career', lang) }}</h1>
-
     {% for cat_key in ['social', 'student', 'training'] %}
     {% set job_list = groups.get(cat_key, []) %}
     {% if job_list %}

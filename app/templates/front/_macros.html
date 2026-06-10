@@ -13,3 +13,29 @@
   </div>
 </div>
 {% endmacro %}
+
+{# 内页深色 Hero 横幅:320px,深蓝叠加,白色 H1 #}
+{% macro page_hero(title, image='') %}
+<div class="page-hero">
+  {% if image %}<img class="page-hero__img" src="/uploads/{{ image }}" alt="{{ title }}" loading="lazy">{% endif %}
+  <div class="page-hero__inner"><h1>{{ title }}</h1></div>
+</div>
+{% endmacro %}
+
+{# 浅灰面包屑条:items=[(name, url), ...],current=末级纯文本 #}
+{% macro crumb_strip(lang, items=[], current='') %}
+<div class="crumb-strip">
+  <nav class="breadcrumb">
+    <span class="crumb-label">{{ t('label.you_are_here', lang) }}:</span>
+    <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
+    {% for name, url in items %}
+    <span class="sep">›</span>
+    <a href="{{ lang_url(lang, url) }}">{{ name }}</a>
+    {% endfor %}
+    {% if current %}
+    <span class="sep">›</span>
+    <span class="crumb-current">{{ current }}</span>
+    {% endif %}
+  </nav>
+</div>
+{% endmacro %}

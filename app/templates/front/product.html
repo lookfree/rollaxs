@@ -1,37 +1,28 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ pick(prod, 'name', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
-{% if prod.hero_image %}
-<div class="hero hero--prod">
-  <img src="/uploads/{{ prod.hero_image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
-</div>
-{% endif %}
+{{ page_hero(pick(prod, 'name', lang), prod.hero_image) }}
 
 {% if crumbs %}
-<nav class="breadcrumb">
-  <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
-  <span class="sep">›</span>
-  <a href="{{ lang_url(lang, '/products/') }}">{{ t('nav.products', lang) }}</a>
-  {% for name, url in crumbs %}
-  <span class="sep">›</span>
-  <a href="{{ lang_url(lang, url) }}">{{ name }}</a>
-  {% endfor %}
-</nav>
+{{ crumb_strip(lang, [(t('nav.products', lang), '/products/')] + crumbs[:-1], crumbs[-1][0]) }}
+{% else %}
+{{ crumb_strip(lang, [], pick(prod, 'name', lang)) }}
 {% endif %}
 
-<div class="prod-layout">
-  <article class="prod-layout__main">
-    <h1>{{ pick(prod, 'name', lang) }}</h1>
-    <div class="prod-body">{{ pick(prod, 'body', lang) | safe }}</div>
-    <a class="btn-inquiry" href="{{ lang_url(lang, '/contact/?about=' + prod.slug) }}">
+<div class="inner-layout prod-layout">
+  <article class="inner-layout__main prod-layout__main">
+    <h1 class="inner-title">{{ pick(prod, 'name', lang) }}</h1>
+    <div class="rich-text prod-body">{{ pick(prod, 'body', lang) | safe }}</div>
+    <a class="btn btn-inquiry" href="{{ lang_url(lang, '/contact/?about=' + prod.slug) }}">
       {{ t('btn.inquiry', lang) }}
     </a>
   </article>
 
-  <aside class="prod-layout__side">
-    <div class="prod-tree">
+  <aside class="inner-layout__side prod-layout__side">
+    <div class="side-nav prod-tree">
       <h4>{{ t('nav.products', lang) }}</h4>
       <ul>
         {% for c, url, depth in side_tree %}
@@ -41,6 +32,7 @@
         {% endfor %}
       </ul>
     </div>
+    <a class="btn side-cta" href="{{ lang_url(lang, '/contact/') }}">{{ t('nav.contact', lang) }}</a>
   </aside>
 </div>
 {% endblock %}

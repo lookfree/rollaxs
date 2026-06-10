@@ -1,18 +1,14 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ t('nav.downloads', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
+{{ page_hero(t('nav.downloads', lang)) }}
+{{ crumb_strip(lang, [], t('nav.downloads', lang)) }}
+
 <section class="downloads-section">
   <div class="downloads-section__inner">
-    <nav class="breadcrumb">
-      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
-      <span class="sep">›</span>
-      <span>{{ t('nav.downloads', lang) }}</span>
-    </nav>
-
-    <h1>{{ t('nav.downloads', lang) }}</h1>
-
     {% for cat_label, items in groups.items() %}
     <div class="dl-group">
       <h2>{{ cat_label }}</h2>
@@ -38,7 +34,8 @@
               {% endif %}
             </td>
             <td>
-              <a href="/uploads/{{ item.file_path }}" download>
+              <a class="dl-link" href="/uploads/{{ item.file_path }}" download>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 16 6 10h4V3h4v7h4l-6 6zm-7 4h14v-2H5v2z"/></svg>
                 {{ t('label.download', lang) }}
               </a>
             </td>

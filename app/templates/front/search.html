@@ -1,14 +1,17 @@
 {% extends "front/base.html" %}
+{% from "front/_macros.html" import page_hero, crumb_strip %}
 
 {% block title %}{{ t('label.search', lang) }}{% if q %}: {{ q }}{% endif %} — {{ site.get('site_name','Rollax') }}{% endblock %}
 
 {% block content %}
+{{ page_hero(t('label.search', lang)) }}
+{{ crumb_strip(lang, [], t('label.search', lang)) }}
+
 <section class="search-section">
   <div class="container">
-    <h1>{{ t('label.search', lang) }}</h1>
     <form method="get" action="{{ lang_url(lang, '/search/') }}" class="search-form">
       <input type="search" name="q" value="{{ q }}" placeholder="{{ t('label.search', lang) }}" autofocus>
-      <button type="submit">{{ t('label.search', lang) }}</button>
+      <button type="submit" class="btn">{{ t('label.search', lang) }}</button>
     </form>
 
     {% if q %}

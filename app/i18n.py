@@ -35,6 +35,22 @@ UI = {
     "label.search_results": {"zh": "条结果", "en": "results", "de": "Ergebnisse", "jp": "件の結果"},
     "label.no_results": {"zh": "未找到相关结果", "en": "No results found", "de": "Keine Ergebnisse",
                           "jp": "結果が見つかりません"},
+    "label.you_are_here": {"zh": "您的位置", "en": "You are here", "de": "Sie sind hier", "jp": "現在地"},
+    "label.backtotop": {"zh": "返回顶部", "en": "Back to top", "de": "Nach oben", "jp": "トップへ"},
+    "label.menu": {"zh": "菜单", "en": "Menu", "de": "Menü", "jp": "メニュー"},
+    "label.play": {"zh": "播放视频", "en": "Play video", "de": "Video abspielen", "jp": "動画を再生"},
+    "footer.contact": {"zh": "联系方式", "en": "Contact", "de": "Kontakt", "jp": "お問い合わせ"},
+    "footer.social": {"zh": "社交媒体", "en": "Social Media", "de": "Social Media",
+                       "jp": "ソーシャルメディア"},
+    "footer.worldwide": {"zh": "全球布局", "en": "Worldwide", "de": "Weltweit", "jp": "グローバル"},
+    "btn.locations": {"zh": "全球基地", "en": "Locations", "de": "Standorte", "jp": "拠点一覧"},
+    "newsletter.desc": {"zh": "订阅我们的新闻通讯,第一时间了解产品与公司动态。",
+                         "en": "Subscribe to our newsletter and stay up to date.",
+                         "de": "Abonnieren Sie unseren Newsletter und bleiben Sie auf dem Laufenden.",
+                         "jp": "ニュースレターに登録して最新情報をお受け取りください。"},
+    "form.salutation": {"zh": "称呼", "en": "Salutation", "de": "Anrede", "jp": "敬称"},
+    "salutation.mr": {"zh": "先生", "en": "Mr.", "de": "Herr", "jp": "様(男性)"},
+    "salutation.ms": {"zh": "女士", "en": "Ms.", "de": "Frau", "jp": "様(女性)"},
 }
 # 执行时按模板实际用到的词条继续补充 UI 字典,保持同结构。
 
