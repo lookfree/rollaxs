@@ -49,6 +49,8 @@ UI = {
                          "de": "Abonnieren Sie unseren Newsletter und bleiben Sie auf dem Laufenden.",
                          "jp": "ニュースレターに登録して最新情報をお受け取りください。"},
     "form.salutation": {"zh": "称呼", "en": "Salutation", "de": "Anrede", "jp": "敬称"},
+    "form.firstname": {"zh": "名", "en": "First name", "de": "Vorname", "jp": "名"},
+    "form.lastname":  {"zh": "姓", "en": "Last name", "de": "Nachname", "jp": "姓"},
     "salutation.mr": {"zh": "先生", "en": "Mr.", "de": "Herr", "jp": "様(男性)"},
     "salutation.ms": {"zh": "女士", "en": "Ms.", "de": "Frau", "jp": "様(女性)"},
 }

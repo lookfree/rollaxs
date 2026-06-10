@@ -19,43 +19,61 @@
 {% endif %}
 
 <section class="cat-section">
-  <div class="cat-section__inner">
-    {% if cat and pick(cat, 'intro', lang) %}
-    <div class="cat-intro">{{ pick(cat, 'intro', lang) | safe }}</div>
-    {% endif %}
+  <div class="cat-section__inner{{ ' inner-layout' if cat }}">
+    <div class="{{ 'inner-layout__main' if cat }}">
+      {% if cat and pick(cat, 'intro', lang) %}
+      <div class="cat-intro rich-text">{{ pick(cat, 'intro', lang) | safe }}</div>
+      {% endif %}
 
-    {% if children %}
-    <div class="card-wall">
-      {% for child in children %}
-      <a class="card" href="{{ lang_url(lang, cat_url + child.slug + '/') }}">
-        {% if child.card_image %}
-        <div class="card__media">
-          <img src="/uploads/{{ child.card_image }}" alt="{{ pick(child, 'name', lang) }}" loading="lazy">
-        </div>
-        {% endif %}
-        <div class="card__body">
-          <h3>{{ pick(child, 'name', lang) }}</h3>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
+      {% if children %}
+      <div class="card-wall{{ ' card-wall--narrow' if cat }}">
+        {% for child in children %}
+        <a class="card" href="{{ lang_url(lang, cat_url + child.slug + '/') }}">
+          {% if child.card_image %}
+          <div class="card__media">
+            <img src="/uploads/{{ child.card_image }}" alt="{{ pick(child, 'name', lang) }}" loading="lazy">
+          </div>
+          {% endif %}
+          <div class="card__body">
+            <h3>{{ pick(child, 'name', lang) }}</h3>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-    {% if products %}
-    <div class="product-grid">
-      {% for prod in products %}
-      <a class="prod-card" href="{{ lang_url(lang, cat_url + prod.slug + '.html') }}">
-        {% if prod.image %}
-        <div class="prod-card__media">
-          <img src="/uploads/{{ prod.image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
-        </div>
-        {% endif %}
-        <div class="prod-card__body">
-          <h3>{{ pick(prod, 'name', lang) }}</h3>
-        </div>
-      </a>
-      {% endfor %}
+      {% if products %}
+      <div class="product-grid">
+        {% for prod in products %}
+        <a class="prod-card" href="{{ lang_url(lang, cat_url + prod.slug + '.html') }}">
+          {% if prod.image %}
+          <div class="prod-card__media">
+            <img src="/uploads/{{ prod.image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
+          </div>
+          {% endif %}
+          <div class="prod-card__body">
+            <h3>{{ pick(prod, 'name', lang) }}</h3>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
+
+    {% if cat and side_tree %}
+    <aside class="inner-layout__side">
+      <div class="side-nav prod-tree">
+        <h4>{{ t('nav.products', lang) }}</h4>
+        <ul>
+          {% for c, url, depth in side_tree %}
+          <li class="depth-{{ depth }}{{ ' on' if c.id == cat.id }}">
+            <a href="{{ lang_url(lang, url) }}">{{ pick(c, 'name', lang) or c.slug }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <a class="btn side-cta" href="{{ lang_url(lang, '/contact/') }}">{{ t('nav.contact', lang) }}</a>
+    </aside>
     {% endif %}
   </div>
 </section>

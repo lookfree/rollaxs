@@ -21,7 +21,22 @@
       "Bash(git push *)",
       "Bash(git commit *)",
       "Bash(.venv/bin/python3 -c ' *)",
-      "Bash(.venv/bin/python3 *)"
+      "Bash(.venv/bin/python3 *)",
+      "Bash(curl -s http://localhost:8765/)",
+      "Bash(curl -s http://localhost:8765/products/new-mobility/)",
+      "Bash(curl -s http://localhost:8765/company/quality/)",
+      "Bash(sqlite3 data/site.db \"select slug from posts where status='published' limit 1\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:8765/news/__TRACKED_VAR__.html)",
+      "Bash(curl -s \"http://localhost:8765/search/?q=%E8%BD%B4%E6%89%BF\")",
+      "Bash(sqlite3 data/site.db \"select count\\(*\\) from search_index\")",
+      "Bash(sqlite3 data/site.db \".tables\")",
+      "Bash(curl -s \"http://localhost:8765/search/?q=bearing\")",
+      "Bash(curl -s \"http://localhost:8765/search/?q=ROLLAX\")",
+      "Bash(python3 *)",
+      "Bash(DB_PATH=data/site.db .venv/bin/uvicorn app.main:app --port 8765)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8765/products/new-mobility/)",
+      "Bash(lsof -ti:8765)",
+      "Bash(xargs kill)"
     ]
   }
 }

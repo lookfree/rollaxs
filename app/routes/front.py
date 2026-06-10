@@ -260,6 +260,7 @@ def category_view(path: str, request: Request, db: Session = Depends(get_db)):
             "products": products,
             "crumbs": build_cat_crumbs(db, cat, lang),
             "cat_url": "/products/" + path.strip("/") + "/",
+            "side_tree": flatten_category_tree(db),
         },
         db=db,
     )

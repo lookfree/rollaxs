@@ -127,7 +127,20 @@ def extract(soup):
         tag.decompose()
     for tag in main.find_all(class_=["page-navigation", "f3-widget-paginator"]):
         tag.decompose()
-    body = "".join(str(p) for p in main.find_all(["p", "h2", "h3", "ul", "blockquote"]))
+    parts = []
+    for el in main.find_all(["p", "h2", "h3", "ul", "blockquote"]):
+        # 跳过 blockquote 内部的 p(避免内容重复),以及纯链接列表(rollax 页内导航)
+        if el.name == "p" and el.find_parent("blockquote") is not None:
+            continue
+        if el.name == "ul":
+            lis = el.find_all("li")
+            link_lis = [li for li in lis if li.find("a") is not None]
+            if lis and len(link_lis) >= len(lis) * 0.8:
+                continue
+        if el.name in ("h2", "h3") and el.get_text(strip=True) in ("产品", "联系我们", "Produkte", "Products", "Kontaktieren Sie uns", "Contact us", "製品", "お問い合わせ"):
+            continue
+        parts.append(str(el))
+    body = "".join(parts)
     imgs = [img.get("src") or img.get("data-src") for img in main.find_all("img")]
     banner = soup.find(id="banner")
     if banner:
