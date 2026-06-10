@@ -1,0 +1,49 @@
+{% extends "front/base.html" %}
+
+{% block title %}{{ t('nav.news', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block content %}
+<section class="news-section">
+  <div class="news-section__inner">
+    <h1>{{ t('nav.news', lang) }}</h1>
+
+    <div class="post-list">
+      {% for post in posts %}
+      <article class="post-card">
+        {% if post.cover %}
+        <a class="post-card__thumb" href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">
+          <img src="/uploads/{{ post.cover }}" alt="{{ pick(post, 'title', lang) }}" loading="lazy">
+        </a>
+        {% endif %}
+        <div class="post-card__body">
+          <h2><a href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">{{ pick(post, 'title', lang) }}</a></h2>
+          <p class="post-card__date">{{ post.publish_at.strftime('%Y-%m-%d') if post.publish_at else '' }}</p>
+          {% if pick(post, 'excerpt', lang) %}
+          <p class="post-card__excerpt">{{ pick(post, 'excerpt', lang) }}</p>
+          {% endif %}
+          <a class="btn-readmore" href="{{ lang_url(lang, '/news/' + post.slug + '.html') }}">
+            {{ t('btn.readmore', lang) }}
+          </a>
+        </div>
+      </article>
+      {% else %}
+      <p>—</p>
+      {% endfor %}
+    </div>
+
+    {% if pages > 1 %}
+    <nav class="pagination">
+      {% if page > 1 %}
+      <a href="{{ lang_url(lang, '/news/?page=' + (page - 1)|string) }}">&laquo;</a>
+      {% endif %}
+      {% for p in range(1, pages + 1) %}
+      <a class="{{ 'active' if p == page }}" href="{{ lang_url(lang, '/news/?page=' + p|string) }}">{{ p }}</a>
+      {% endfor %}
+      {% if page < pages %}
+      <a href="{{ lang_url(lang, '/news/?page=' + (page + 1)|string) }}">&raquo;</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

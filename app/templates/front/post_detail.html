@@ -1,0 +1,30 @@
+{% extends "front/base.html" %}
+
+{% block title %}{{ pick(post, 'title', lang) }} — {{ t('nav.news', lang) }} — {{ site.get('site_name','Rollax') }}{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+  <div class="post-detail__inner">
+    <nav class="breadcrumb">
+      <a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a>
+      <span class="sep">›</span>
+      <a href="{{ lang_url(lang, '/news/') }}">{{ t('nav.news', lang) }}</a>
+      <span class="sep">›</span>
+      <span>{{ pick(post, 'title', lang) }}</span>
+    </nav>
+
+    <h1>{{ pick(post, 'title', lang) }}</h1>
+    <p class="post-detail__date">{{ post.publish_at.strftime('%Y-%m-%d') if post.publish_at else '' }}</p>
+
+    {% if post.cover %}
+    <img class="post-detail__cover" src="/uploads/{{ post.cover }}" alt="{{ pick(post, 'title', lang) }}" loading="lazy">
+    {% endif %}
+
+    <div class="post-detail__body">
+      {{ pick(post, 'body', lang) | safe }}
+    </div>
+
+    <p><a href="{{ lang_url(lang, '/news/') }}">&larr; {{ t('nav.news', lang) }}</a></p>
+  </div>
+</article>
+{% endblock %}
