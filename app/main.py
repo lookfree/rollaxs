@@ -21,7 +21,12 @@ def create_app():
     app.state.session_factory = make_session_factory(engine)
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
 
-    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key, same_site="lax")
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.secret_key,
+        same_site="lax",
+        https_only=settings.session_https_only,
+    )
 
     @app.middleware("http")
     async def lang_middleware(request, call_next):
