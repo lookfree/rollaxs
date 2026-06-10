@@ -1,0 +1,11 @@
+{% extends "front/base.html" %}
+
+{% block title %}404 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+  <h1>404</h1>
+  <p>{% if lang == 'zh' %}页面未找到{% elif lang == 'en' %}Page not found{% elif lang == 'de' %}Seite nicht gefunden{% else %}ページが見つかりません{% endif %}</p>
+  <a href="{{ lang_url(lang, '/') }}">{{ t('nav.home', lang) }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% macro img(src, alt='', cls='') %}
+{% if src %}
+<img src="/uploads/{{ src }}" alt="{{ alt }}" class="{{ cls }}" loading="lazy">
+{% endif %}
+{% endmacro %}
+
+{% macro card(title, url, image='', desc='') %}
+<div class="card">
+  {% if image %}{{ img(image, title, 'card__img') }}{% endif %}
+  <div class="card__body">
+    <h3><a href="{{ url }}">{{ title }}</a></h3>
+    {% if desc %}<p>{{ desc }}</p>{% endif %}
+  </div>
+</div>
+{% endmacro %}

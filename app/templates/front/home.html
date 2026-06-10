@@ -1,0 +1,10 @@
+{% extends "front/base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero__inner">
+    <h1>{{ site.get('site_name', 'Rollax') }}</h1>
+    <p>{{ site.get('tagline', '') }}</p>
+  </div>
+</section>
+{% endblock %}

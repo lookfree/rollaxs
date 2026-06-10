@@ -1,0 +1,11 @@
+{% extends "front/base.html" %}
+
+{% block title %}500 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+  <h1>500</h1>
+  <p>{% if lang == 'zh' %}服务器内部错误{% elif lang == 'en' %}Internal Server Error{% elif lang == 'de' %}Interner Serverfehler{% else %}サーバーエラー{% endif %}</p>
+  <a href="{{ lang_url(lang, '/') }}">{{ t('nav.home', lang) }}</a>
+</div>
+{% endblock %}

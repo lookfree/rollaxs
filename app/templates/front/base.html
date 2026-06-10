@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.get('site_name','Rollax') }}{% endblock %}</title>
+  {% block seo %}{% endblock %}
+  <link rel="stylesheet" href="/static/css/site.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="topbar__logo" href="{{ lang_url(lang, '/') }}">{{ site.get('site_name','Rollax') }}</a>
+    <nav class="topbar__nav">
+      <a href="{{ lang_url(lang, '/') }}">{{ t('nav.home', lang) }}</a>
+      {% for pg in nav_pages %}
+      <div class="nav-item">
+        <a href="{{ lang_url(lang, '/' + pg.slug + '/') }}">{{ pick(pg, 'title', lang) }}</a>
+        {% if pg._children %}
+        <div class="nav-dropdown">
+          {% for child in pg._children %}
+          <a href="{{ lang_url(lang, '/' + pg.slug + '/' + child.slug + '/') }}">{{ pick(child, 'title', lang) }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </nav>
+    <div class="topbar__meta">
+      {% if site.get('phone') %}<a class="topbar__phone" href="tel:{{ site.get('phone','') }}">{{ site.get('phone','') }}</a>{% endif %}
+      <a class="search-ico" href="{{ lang_url(lang, '/search/') }}" aria-label="{{ t('label.search', lang) }}">&#128269;</a>
+      <div class="lang-switcher">
+        {% for code in LANGS %}<a class="lang-link{% if code == lang %} lang-link--active{% endif %}" href="{{ lang_url(code, path) }}">{{ LANG_NAMES[code] }}</a>{% endfor %}
+      </div>
+    </div>
+  </div>
+</header>
+<div class="prodbar">{% block prodbar %}{% endblock %}</div>
+<main>{% block content %}{% endblock %}</main>
+<section class="newsletter">
+  <div class="newsletter__inner">
+    <h3>{{ t('newsletter.title', lang) }}</h3>
+    <form method="post" action="{{ lang_url(lang, '/newsletter/') }}">
+      <input type="text" name="salutation" placeholder="Salutation">
+      <input type="text" name="first_name" placeholder="{{ t('form.name', lang) }}">
+      <input type="text" name="last_name" placeholder="">
+      <input type="email" name="email" placeholder="{{ t('form.email', lang) }}" required>
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+      <button type="submit">{{ t('btn.subscribe', lang) }}</button>
+    </form>
+  </div>
+</section>
+<footer class="footer">
+  <div class="footer__inner">
+    <p>{{ site.get('footer_text', '') }}</p>
+    <p>{{ site.get('copyright', '') }}</p>
+  </div>
+</footer>
+<script src="/static/js/site.js" defer></script>
+</body>
+</html>
