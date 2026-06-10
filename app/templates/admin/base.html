@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}管理后台{% endblock %} — Rollax</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script src="https://unpkg.com/htmx.org@2" defer></script>
+</head>
+<body class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Rollax 后台</div>
+    <nav class="admin-nav">
+      <a href="/admin/">仪表盘</a>
+      <a href="/admin/pages">页面</a>
+      <a href="/admin/categories">产品分类</a>
+      <a href="/admin/products">产品</a>
+      <a href="/admin/posts">新闻</a>
+      <a href="/admin/jobs">招聘</a>
+      <a href="/admin/downloads">下载</a>
+      <a href="/admin/media">媒体库</a>
+      <a href="/admin/inquiries">询盘</a>
+      <a href="/admin/subscribers">订阅</a>
+      <a href="/admin/settings">设置</a>
+    </nav>
+  </aside>
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <span>{% block page_title %}{% endblock %}</span>
+      <a href="/admin/logout" class="logout-btn">退出登录</a>
+    </header>
+    <div class="admin-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

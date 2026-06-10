@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+
+{% block title %}仪表盘{% endblock %}
+{% block page_title %}仪表盘{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card">
+    <h3>{{ stats.pages }}</h3>
+    <p>页面</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.products }}</h3>
+    <p>产品</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.posts }}</h3>
+    <p>新闻</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.jobs }}</h3>
+    <p>招聘</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.downloads }}</h3>
+    <p>下载</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.inquiries }}</h3>
+    <p>询盘</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.subscribers }}</h3>
+    <p>订阅</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{ stats.media }}</h3>
+    <p>媒体</p>
+  </div>
+</div>
+
+{% if recent_inquiries %}
+<h2>最新询盘</h2>
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>姓名</th>
+      <th>邮箱</th>
+      <th>留言</th>
+      <th>时间</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inq in recent_inquiries %}
+    <tr {% if not inq.is_read %}class="unread"{% endif %}>
+      <td>{{ inq.name }}</td>
+      <td>{{ inq.email }}</td>
+      <td>{{ inq.message[:60] }}{% if inq.message|length > 60 %}…{% endif %}</td>
+      <td>{{ inq.created_at.strftime('%Y-%m-%d %H:%M') if inq.created_at else '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

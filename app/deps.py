@@ -7,3 +7,13 @@ def get_db(request: Request):
         yield db
     finally:
         db.close()
+
+
+class RequiresLogin(Exception):
+    pass
+
+
+def require_admin(request: Request):
+    if not request.session.get("admin_id"):
+        raise RequiresLogin()
+    return request.session["admin_id"]

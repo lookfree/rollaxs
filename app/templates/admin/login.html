@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理员登录 — Rollax</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="login-page">
+  <div class="login-box">
+    <h1>管理员登录</h1>
+    {% if error %}
+    <p class="login-error">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/admin/login">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-primary">登录</button>
+    </form>
+  </div>
+</body>
+</html>

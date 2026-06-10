@@ -50,12 +50,22 @@ def create_app():
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
     app.mount("/uploads", StaticFiles(directory=str(settings.uploads_dir)), name="uploads")
 
-    # Per-app rate limiter — lives on app.state so each test app gets a fresh one
+    # Per-app rate limiters — live on app.state so each test app gets a fresh one
     from app.security import RateLimiter
     app.state.form_limiter = RateLimiter(5, 60)
+    app.state.login_limiter = RateLimiter(10, 300)
+
+    from app.deps import RequiresLogin
+    from fastapi.responses import RedirectResponse as _Redirect
+
+    @app.exception_handler(RequiresLogin)
+    async def requires_login_handler(request: Request, exc: RequiresLogin):
+        return _Redirect("/admin/login", status_code=303)
 
     from app.routes.front import router as front_router, pages_router
+    from app.routes.admin import admin_router
     app.include_router(front_router)
+    app.include_router(admin_router)   # admin BEFORE pages catch-all
     app.include_router(pages_router)  # 页面树 catch-all,必须最后挂载
 
     @app.exception_handler(404)

@@ -13,7 +13,7 @@ def app(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def client(app):
-    return TestClient(app, raise_server_exceptions=False)
+    return TestClient(app, raise_server_exceptions=False, follow_redirects=False)
 
 
 @pytest.fixture()
@@ -24,3 +24,22 @@ def db(app):
         yield session
     finally:
         session.close()
+
+
+@pytest.fixture()
+def admin_user(db):
+    """Insert a boss admin user into the test database."""
+    from app.models import AdminUser
+    from app.security import hash_password
+    user = AdminUser(username="boss", password_hash=hash_password("pw12345"))
+    db.add(user)
+    db.commit()
+    return user
+
+
+@pytest.fixture()
+def logged_client(app, admin_user):
+    """A test client that is already logged in as admin."""
+    c = TestClient(app, raise_server_exceptions=False, follow_redirects=False)
+    c.post("/admin/login", data={"username": "boss", "password": "pw12345"})
+    return c
