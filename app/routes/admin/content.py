@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_db, require_admin
 from app.i18n import LANGS
-from app.models import Page, ProductCategory, Product
+from app.models import Page, ProductCategory, Product, Post, Job, Download
 from app.search import rebuild_index
 
 router = APIRouter(dependencies=[Depends(require_admin)])
@@ -46,7 +46,19 @@ CONTENT_TYPES = {ct.key: ct for ct in [
                               ("sort", "number"), ("image", "image"), ("hero_image", "image"),
                               ("gallery", "text")],
                 reindex=True),
-    # posts/jobs/downloads 在 Task 15 加入此表
+    ContentType("posts", Post, "新闻",
+                i18n_fields=[("title", "text"), ("excerpt", "textarea"), ("body", "rich")],
+                plain_fields=[("slug", "text"), ("cover", "image"),
+                              ("status", "select:status"), ("publish_at", "datetime")],
+                order_by="-publish_at", reindex=True),
+    ContentType("jobs", Job, "招聘",
+                i18n_fields=[("title", "text"), ("body", "rich")],
+                plain_fields=[("category", "select:job_category"), ("status", "select:job_status"),
+                              ("sort", "number")], has_seo=False),
+    ContentType("downloads", Download, "下载",
+                i18n_fields=[("title", "text"), ("category", "text")],
+                plain_fields=[("file_path", "file"), ("file_size", "number"), ("sort", "number")],
+                has_seo=False),
 ]}
 
 # select:xxx 枚举选项(非内容引用)

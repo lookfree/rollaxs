@@ -1,4 +1,4 @@
-from app.models import Page, ProductCategory, Product
+from app.models import Page, ProductCategory, Product, Post, Job, Download
 
 
 def test_page_crud(logged_client, db):
@@ -28,3 +28,16 @@ def test_product_crud_updates_search_index(logged_client, db):
 
 def test_crud_requires_login(client):
     assert client.get("/admin/pages").status_code == 303
+
+
+def test_post_job_download_crud(logged_client, db):
+    logged_client.post("/admin/posts/new", data={
+        "slug": "n1", "title_zh": "新闻一", "status": "published",
+        "publish_at": "2026-06-10T08:00"})
+    assert db.query(Post).filter_by(slug="n1", status="published").count() == 1
+    logged_client.post("/admin/jobs/new", data={"title_zh": "工程师", "category": "social",
+                                                "status": "open", "sort": "0"})
+    assert db.query(Job).count() == 1
+    logged_client.post("/admin/downloads/new", data={"title_zh": "手册", "file_path": "a.pdf",
+                                                     "sort": "0", "file_size": "0"})
+    assert db.query(Download).count() == 1
