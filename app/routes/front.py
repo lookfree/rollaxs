@@ -117,6 +117,19 @@ def flatten_category_tree(db: Session) -> list:
     return out
 
 
+def page_url(db: Session, page: Page) -> str:
+    """Build the canonical URL for a page by walking its parent chain."""
+    parts = []
+    current = page
+    while current is not None:
+        parts.append(current.slug)
+        if current.parent_id is None:
+            break
+        current = db.query(Page).filter_by(id=current.parent_id).first()
+    parts.reverse()
+    return "/" + "/".join(parts) + "/"
+
+
 def resolve_category_path(db: Session, path: str) -> ProductCategory:
     """Walk /products/{slug1}/{slug2}/... verifying parent chain. Raises 404 if invalid."""
     slugs = [s for s in path.split("/") if s]
@@ -298,6 +311,20 @@ def downloads_list(request: Request, db: Session = Depends(get_db)):
         cat_label = pick(item, "category", lang) or item.category_zh or "其他"
         groups.setdefault(cat_label, []).append(item)
     return render(request, "front/downloads.html", {"groups": groups}, db=db)
+
+
+# ---------------------------------------------------------------------------
+# Search (Task 10)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/search/")
+def search_view(request: Request, q: str = Query(default=""), db: Session = Depends(get_db)):
+    hits = []
+    if q.strip():
+        from app.search import query_index
+        hits = query_index(db, q.strip(), request.state.lang)
+    return render(request, "front/search.html", {"q": q, "hits": hits}, db=db)
 
 
 # ---------------------------------------------------------------------------

@@ -32,6 +32,9 @@ UI = {
     "job.cat.training": {"zh": "实习培训", "en": "Internship", "de": "Praktikum", "jp": "インターンシップ"},
     "label.download_size": {"zh": "大小", "en": "Size", "de": "Größe", "jp": "サイズ"},
     "label.download": {"zh": "下载", "en": "Download", "de": "Herunterladen", "jp": "ダウンロード"},
+    "label.search_results": {"zh": "条结果", "en": "results", "de": "Ergebnisse", "jp": "件の結果"},
+    "label.no_results": {"zh": "未找到相关结果", "en": "No results found", "de": "Keine Ergebnisse",
+                          "jp": "結果が見つかりません"},
 }
 # 执行时按模板实际用到的词条继续补充 UI 字典,保持同结构。
 
