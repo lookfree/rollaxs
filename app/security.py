@@ -21,6 +21,10 @@ class RateLimiter:
 
     def allow(self, key: str) -> bool:
         now = time.monotonic()
+        # 顺手清理整窗过期的旧 key,防止字典无限增长
+        if len(self.hits) > 1000:
+            for k in [k for k, dq in self.hits.items() if not dq or now - dq[-1] > self.window]:
+                del self.hits[k]
         q = self.hits[key]
         while q and now - q[0] > self.window:
             q.popleft()

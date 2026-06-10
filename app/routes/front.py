@@ -1,6 +1,9 @@
+import re
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Form, Response
-from fastapi.responses import Response as FastAPIResponse
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+
+EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 from app.deps import get_db
 from app.i18n import pick
 from app.models import Page, Setting, ProductCategory, Product, Post, Job, Download, Inquiry, Subscriber, utcnow
@@ -350,31 +353,34 @@ def sitemap(request: Request, db: Session = Depends(get_db)):
     for path in ("/", "/news/", "/career/", "/downloads/", "/contact/", "/search/"):
         add_url(path)
 
-    # Pages
-    for pg in db.query(Page).all():
-        add_url(page_url(db, pg))
+    # Pages(一次查询建 id→page 映射,内存拼 URL,避免逐级查询)
+    pages = db.query(Page).all()
+    page_by_id = {p.id: p for p in pages}
+    for pg in pages:
+        parts, cur = [], pg
+        while cur is not None:
+            parts.append(cur.slug)
+            cur = page_by_id.get(cur.parent_id) if cur.parent_id else None
+        add_url("/" + "/".join(reversed(parts)) + "/")
 
-    # Product categories
-    for cat in db.query(ProductCategory).all():
-        add_url(cat_url_path(db, cat))
-
-    # Products
-    from app.models import Product as ProductModel
-    for prod in db.query(ProductModel).all():
-        prod_path = cat_url_by_id(db, prod.category_id) + f"{prod.slug}.html"
-        add_url(prod_path)
+    # Product categories + products(flatten 一次查询出全树 URL)
+    cat_urls = {c.id: url for c, url, _ in flatten_category_tree(db)}
+    for url in cat_urls.values():
+        add_url(url)
+    for prod in db.query(Product).all():
+        add_url(cat_urls.get(prod.category_id, "/products/") + f"{prod.slug}.html")
 
     # Posts (published)
-    from app.models import Post as PostModel
-    for po in db.query(PostModel).filter_by(status="published").all():
+    for po in db.query(Post).filter_by(status="published").all():
         lastmod = po.publish_at.strftime("%Y-%m-%d") if po.publish_at else ""
         add_url(f"/news/{po.slug}.html", lastmod=lastmod)
 
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    from html import escape
     for entry in urls:
         lines.append("  <url>")
-        lines.append(f"    <loc>{entry['loc']}</loc>")
+        lines.append(f"    <loc>{escape(entry['loc'])}</loc>")
         if entry.get("lastmod"):
             lines.append(f"    <lastmod>{entry['lastmod']}</lastmod>")
         lines.append("  </url>")
@@ -449,13 +455,10 @@ def contact_post(
     limiter = request.app.state.form_limiter
     client_ip = request.client.host if request.client else "unknown"
     if not limiter.allow(client_ip):
-        from fastapi.responses import Response as PlainResponse
-        return PlainResponse(status_code=429, content="Too many requests")
+        return Response(status_code=429, content="Too many requests")
 
     # Basic validation
-    lang = request.state.lang
-    if "@" not in email or not message.strip():
-        from app.i18n import t
+    if not EMAIL_RE.match(email) or not message.strip():
         return render(
             request,
             "front/contact.html",
@@ -477,13 +480,10 @@ def contact_post(
     db.add(inq)
     db.commit()
 
-    # SMTP notification (failures are silently swallowed in mailer.notify_inquiry)
-    try:
-        from app.mailer import notify_inquiry
-        site = {row.key: row.value for row in db.query(Setting).all()}
-        notify_inquiry(site, inq)
-    except Exception:
-        pass
+    # SMTP 失败在 mailer.notify_inquiry 内部吞掉,这里不再包一层
+    from app.mailer import notify_inquiry
+    site = {row.key: row.value for row in db.query(Setting).all()}
+    notify_inquiry(site, inq)
 
     return render(
         request,
@@ -508,11 +508,13 @@ def newsletter_post(
     website: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
+    from app.i18n import lang_url
+    done = RedirectResponse(lang_url(request.state.lang, "/?subscribed=1"), status_code=303)
     # Honeypot
     if website:
-        return render(request, "front/home.html", {"subscribed": True}, db=db)
+        return done
 
-    if email and "@" in email:
+    if email and EMAIL_RE.match(email):
         existing = db.query(Subscriber).filter_by(email=email).first()
         if not existing:
             db.add(Subscriber(
@@ -523,7 +525,7 @@ def newsletter_post(
             ))
             db.commit()
 
-    return render(request, "front/home.html", {"subscribed": True}, db=db)
+    return done
 
 
 # ---------------------------------------------------------------------------

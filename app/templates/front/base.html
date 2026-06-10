@@ -12,6 +12,11 @@
   {% if canonical %}
   <link rel="canonical" href="{{ canonical }}">
   {% endif %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site.get('site_name','Rollax') }}">
+  {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
+  <meta property="og:title" content="{{ self.title() }}">
+  {% if site.get('og_image') %}<meta property="og:image" content="{{ site.get('og_image') }}">{% endif %}
   {% block seo %}{% endblock %}
   <link rel="stylesheet" href="/static/css/site.css">
 </head>

@@ -12,7 +12,9 @@ def notify_inquiry(site: dict, inquiry) -> None:
         "plain",
         "utf-8",
     )
-    msg["Subject"] = f"[官网询盘] {inquiry.name}"
+    # 头部值必须去掉换行,防止邮件头注入
+    safe_name = (inquiry.name or "").replace("\r", " ").replace("\n", " ")
+    msg["Subject"] = f"[官网询盘] {safe_name}"
     msg["From"] = site.get("smtp_from", site.get("smtp_user", ""))
     msg["To"] = site.get("inquiry_to", "")
     try:

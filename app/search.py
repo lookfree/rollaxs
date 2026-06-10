@@ -53,13 +53,19 @@ def rebuild_index(engine, db):
 
 
 def query_index(db, q: str, lang: str, limit: int = 30):
+    if not re.search(r"\w", q or ""):
+        return []
     safe = '"' + q.replace('"', " ") + '"'
-    rs = db.execute(
-        text(
-            "SELECT kind, title, url, snippet(search_index, 4, '<b>', '</b>', '…', 12) AS snip "
-            "FROM search_index WHERE search_index MATCH :q AND lang = :lang "
-            "ORDER BY bm25(search_index) LIMIT :n"
-        ),
-        {"q": safe, "lang": lang, "n": limit},
-    )
-    return [dict(r._mapping) for r in rs]
+    try:
+        rs = db.execute(
+            text(
+                "SELECT kind, title, url, snippet(search_index, 4, '<b>', '</b>', '…', 12) AS snip "
+                "FROM search_index WHERE search_index MATCH :q AND lang = :lang "
+                "ORDER BY bm25(search_index) LIMIT :n"
+            ),
+            {"q": safe, "lang": lang, "n": limit},
+        )
+        return [dict(r._mapping) for r in rs]
+    except Exception:
+        # FTS5 解析异常(纯符号、超长查询等)按无结果处理
+        return []
