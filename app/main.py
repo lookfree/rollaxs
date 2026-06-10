@@ -50,6 +50,10 @@ def create_app():
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
     app.mount("/uploads", StaticFiles(directory=str(settings.uploads_dir)), name="uploads")
 
+    # Per-app rate limiter — lives on app.state so each test app gets a fresh one
+    from app.security import RateLimiter
+    app.state.form_limiter = RateLimiter(5, 60)
+
     from app.routes.front import router as front_router, pages_router
     app.include_router(front_router)
     app.include_router(pages_router)  # 页面树 catch-all,必须最后挂载

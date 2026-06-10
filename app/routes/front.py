@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Query
+from fastapi import APIRouter, Request, Depends, HTTPException, Query, Form, Response
+from fastapi.responses import Response as FastAPIResponse
 from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.i18n import pick
-from app.models import Page, Setting, ProductCategory, Product, Post, Job, Download, utcnow
+from app.models import Page, Setting, ProductCategory, Product, Post, Job, Download, Inquiry, Subscriber, utcnow
 
 router = APIRouter()
 # 页面树兜底路由单独一个 router,由 main.py 在 router 之后挂载,
@@ -297,6 +298,122 @@ def downloads_list(request: Request, db: Session = Depends(get_db)):
         cat_label = pick(item, "category", lang) or item.category_zh or "其他"
         groups.setdefault(cat_label, []).append(item)
     return render(request, "front/downloads.html", {"groups": groups}, db=db)
+
+
+# ---------------------------------------------------------------------------
+# Contact form (Task 9)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/contact/")
+def contact_get(request: Request, about: str = Query(default=""), db: Session = Depends(get_db)):
+    msg = f"Re: {about}" if about else ""
+    return render(
+        request,
+        "front/contact.html",
+        {"success": False, "error": None, "form_data": {"message": msg}},
+        db=db,
+    )
+
+
+@router.post("/contact/")
+def contact_post(
+    request: Request,
+    name: str = Form(default=""),
+    email: str = Form(default=""),
+    company: str = Form(default=""),
+    message: str = Form(default=""),
+    website: str = Form(default=""),
+    db: Session = Depends(get_db),
+):
+    # Honeypot check
+    if website:
+        return render(
+            request,
+            "front/contact.html",
+            {"success": True, "error": None, "form_data": {}},
+            db=db,
+        )
+
+    # Rate limit
+    limiter = request.app.state.form_limiter
+    client_ip = request.client.host if request.client else "unknown"
+    if not limiter.allow(client_ip):
+        from fastapi.responses import Response as PlainResponse
+        return PlainResponse(status_code=429, content="Too many requests")
+
+    # Basic validation
+    lang = request.state.lang
+    if "@" not in email or not message.strip():
+        from app.i18n import t
+        return render(
+            request,
+            "front/contact.html",
+            {
+                "success": False,
+                "error": "请填写有效邮箱和留言",
+                "form_data": {"name": name, "email": email, "company": company, "message": message},
+            },
+            db=db,
+        )
+
+    inq = Inquiry(
+        name=name,
+        email=email,
+        company=company,
+        message=message,
+        source_path=request.scope.get("path", "/contact/"),
+    )
+    db.add(inq)
+    db.commit()
+
+    # SMTP notification (failures are silently swallowed in mailer.notify_inquiry)
+    try:
+        from app.mailer import notify_inquiry
+        site = {row.key: row.value for row in db.query(Setting).all()}
+        notify_inquiry(site, inq)
+    except Exception:
+        pass
+
+    return render(
+        request,
+        "front/contact.html",
+        {"success": True, "error": None, "form_data": {}},
+        db=db,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Newsletter subscription (Task 9)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/newsletter/")
+def newsletter_post(
+    request: Request,
+    email: str = Form(default=""),
+    first_name: str = Form(default=""),
+    last_name: str = Form(default=""),
+    salutation: str = Form(default=""),
+    website: str = Form(default=""),
+    db: Session = Depends(get_db),
+):
+    # Honeypot
+    if website:
+        return render(request, "front/home.html", {"subscribed": True}, db=db)
+
+    if email and "@" in email:
+        existing = db.query(Subscriber).filter_by(email=email).first()
+        if not existing:
+            db.add(Subscriber(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                salutation=salutation,
+            ))
+            db.commit()
+
+    return render(request, "front/home.html", {"subscribed": True}, db=db)
 
 
 # ---------------------------------------------------------------------------
