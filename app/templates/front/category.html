@@ -37,7 +37,7 @@
     {% if children %}
     <div class="card-wall">
       {% for child in children %}
-      <a class="card" href="{{ lang_url(lang, '/products/' + child.slug + '/') if not cat else lang_url(lang, '/products/' + cat.slug + '/' + child.slug + '/') }}">
+      <a class="card" href="{{ lang_url(lang, cat_url + child.slug + '/') }}">
         {% if child.card_image %}
         <img src="/uploads/{{ child.card_image }}" alt="{{ pick(child, 'name', lang) }}" loading="lazy">
         {% endif %}
@@ -52,7 +52,7 @@
     {% if products %}
     <div class="product-grid">
       {% for prod in products %}
-      <a class="prod-card" href="{{ lang_url(lang, '/products/' + cat.slug + '/' + prod.slug + '.html') }}">
+      <a class="prod-card" href="{{ lang_url(lang, cat_url + prod.slug + '.html') }}">
         {% if prod.image %}
         <img src="/uploads/{{ prod.image }}" alt="{{ pick(prod, 'name', lang) }}" loading="lazy">
         {% endif %}

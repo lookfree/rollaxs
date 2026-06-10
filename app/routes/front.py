@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.i18n import pick
-from app.models import Page, Setting, ProductCategory, Product, Post, Job, Download
+from app.models import Page, Setting, ProductCategory, Product, Post, Job, Download, utcnow
 
 router = APIRouter()
 # 页面树兜底路由单独一个 router,由 main.py 在 router 之后挂载,
@@ -142,18 +142,28 @@ def products_index(request: Request, db: Session = Depends(get_db)):
     return render(
         request,
         "front/category.html",
-        {"cat": None, "children": roots, "products": [], "tree": {}, "crumbs": []},
+        {"cat": None, "children": roots, "products": [], "tree": {}, "crumbs": [], "cat_url": "/products/"},
         db=db,
     )
 
 
 @router.get("/products/{path:path}.html")
 def product_detail(path: str, request: Request, db: Session = Depends(get_db)):
-    slug = path.split("/")[-1]
-    prod = db.query(Product).filter_by(slug=slug).first()
+    segments = path.split("/")
+    if len(segments) < 2:
+        # A product URL must have at least one category segment before the slug.
+        raise HTTPException(404)
+    prod_slug = segments[-1]
+    cat_segments = segments[:-1]
+    # Validate that the category path is correct (parent chain must match).
+    resolved_cat = resolve_category_path(db, "/".join(cat_segments))
+    prod = db.query(Product).filter_by(slug=prod_slug).first()
     if not prod:
         raise HTTPException(404)
-    cat = db.query(ProductCategory).filter_by(id=prod.category_id).first()
+    # Ensure the product actually belongs to the resolved category.
+    if prod.category_id != resolved_cat.id:
+        raise HTTPException(404)
+    cat = resolved_cat
     tree = category_tree(db)
     lang = request.state.lang
     crumbs = build_cat_crumbs(db, cat, lang) + [
@@ -192,6 +202,7 @@ def category_view(path: str, request: Request, db: Session = Depends(get_db)):
             "products": products,
             "tree": category_tree(db),
             "crumbs": build_cat_crumbs(db, cat, lang),
+            "cat_url": cat_url_path(db, cat),
         },
         db=db,
     )
@@ -225,7 +236,11 @@ def news_list(request: Request, page: int = 1, db: Session = Depends(get_db)):
 
 @router.get("/news/{slug}.html")
 def news_detail(slug: str, request: Request, db: Session = Depends(get_db)):
-    post = db.query(Post).filter_by(slug=slug, status="published").first()
+    post = (
+        db.query(Post)
+        .filter(Post.slug == slug, Post.status == "published", Post.publish_at <= utcnow())
+        .first()
+    )
     if not post:
         raise HTTPException(404)
     return render(request, "front/post_detail.html", {"post": post}, db=db)
