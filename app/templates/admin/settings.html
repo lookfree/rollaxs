@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+
+{% block title %}站点设置{% endblock %}
+{% block page_title %}站点设置{% endblock %}
+
+{% block content %}
+{% if saved %}
+<div style="color:#1e7e34;background:#f0fef4;border:1px solid #c3e6cb;padding:8px 12px;border-radius:4px;margin-bottom:16px;">已保存</div>
+{% endif %}
+
+<form method="post" action="/admin/settings" style="max-width:720px;">
+  {% for group_name, fields in groups %}
+  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:20px;margin-bottom:20px;">
+    <h2>{{ group_name }}</h2>
+    {% for key, label, widget in fields %}
+    <div class="form-row">
+      <label>{{ label }}</label>
+      {% if widget == 'textarea' %}
+      <textarea name="{{ key }}" rows="4">{{ values.get(key, '') }}</textarea>
+      {% elif widget == 'check' %}
+      <label style="font-weight:normal;"><input type="checkbox" name="{{ key }}" value="1"
+        {% if values.get(key, '') == '1' %}checked{% endif %}> 启用</label>
+      {% elif widget == 'password' %}
+      <input type="password" name="{{ key }}" value="{{ values.get(key, '') }}" autocomplete="new-password">
+      {% else %}
+      <input type="text" name="{{ key }}" value="{{ values.get(key, '') }}">
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <div class="form-actions">
+    <button type="submit" class="btn btn-save">保存设置</button>
+  </div>
+</form>
+{% endblock %}

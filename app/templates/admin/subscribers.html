@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+
+{% block title %}订阅{% endblock %}
+{% block page_title %}Newsletter 订阅{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>订阅（共 {{ items | length }} 人）</h2>
+  <a class="btn btn-save" href="/admin/subscribers/export.csv">导出 CSV</a>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr><th>称谓</th><th>名</th><th>姓</th><th>邮箱</th><th>订阅时间</th></tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.salutation }}</td>
+      <td>{{ item.first_name }}</td>
+      <td>{{ item.last_name }}</td>
+      <td><a href="mailto:{{ item.email }}">{{ item.email }}</a></td>
+      <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" style="color:#888;">暂无订阅</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

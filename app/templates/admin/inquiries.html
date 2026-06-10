@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+
+{% block title %}询盘{% endblock %}
+{% block page_title %}询盘{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>询盘（共 {{ items | length }} 条）</h2>
+  <a class="btn btn-save" href="/admin/inquiries/export.csv">导出 CSV</a>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>姓名</th><th>邮箱</th><th>公司</th><th>电话</th><th>留言</th>
+      <th>来源</th><th>时间</th><th style="width:90px;">状态</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr {% if not item.is_read %}class="unread"{% endif %} id="inq-{{ item.id }}">
+      <td>{{ item.name }}</td>
+      <td><a href="mailto:{{ item.email }}">{{ item.email }}</a></td>
+      <td>{{ item.company }}</td>
+      <td>{{ item.phone }}</td>
+      <td style="max-width:320px;white-space:pre-wrap;">{{ item.message }}</td>
+      <td>{{ item.source_path }}</td>
+      <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if item.is_read %}
+        <span style="color:#888;">已读</span>
+        {% else %}
+        <button class="btn btn-cancel" style="font-size:12px;padding:3px 10px;"
+                hx-post="/admin/inquiries/{{ item.id }}/read"
+                hx-target="this" hx-swap="outerHTML">标记已读</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" style="color:#888;">暂无询盘</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
