@@ -35,6 +35,22 @@ async def upload_media(
     return {"url": "/uploads/" + rel, "id": media.id}
 
 
+@router.get("/media/list.json")
+def media_list_json(request: Request, db: Session = Depends(get_db)):
+    """供表单媒体选择器使用的 JSON 列表(含文件大小)。"""
+    uploads_dir: Path = request.app.state.settings.uploads_dir
+    items = db.query(Media).order_by(Media.created_at.desc()).limit(500).all()
+    out = []
+    for m in items:
+        try:
+            size = (uploads_dir / m.path).stat().st_size
+        except OSError:
+            size = 0
+        out.append({"id": m.id, "path": m.path, "thumb_path": m.thumb_path,
+                    "kind": m.kind, "size": size})
+    return out
+
+
 @router.get("/media")
 def media_list(request: Request, page: int = 1, db: Session = Depends(get_db)):
     total = db.query(Media).count()

@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ ct.label }}{% endblock %}
+{% block page_title %}{{ ct.label }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ ct.label }}（共 {{ rows | length }} 项）</h2>
+  <a class="btn btn-save" href="/admin/{{ ct.key }}/new">新建{{ ct.label }}</a>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>标题</th>
+      {% if has_slug %}<th>slug</th>{% endif %}
+      <th>排序</th>
+      <th style="width:160px;">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item, depth in rows %}
+    <tr>
+      <td>
+        {% if depth %}<span style="color:#bbb;">{{ '　' * depth }}└ </span>{% endif %}
+        <a href="/admin/{{ ct.key }}/{{ item.id }}">{{ item_label(ct, item) or '（无标题）' }}</a>
+      </td>
+      {% if has_slug %}<td>{{ item.slug }}</td>{% endif %}
+      <td>{{ item.sort if item.sort is defined else '—' }}</td>
+      <td>
+        <a class="btn btn-cancel" style="font-size:12px;padding:3px 10px;" href="/admin/{{ ct.key }}/{{ item.id }}">编辑</a>
+        <form method="post" action="/admin/{{ ct.key }}/{{ item.id }}/delete" style="display:inline"
+              onsubmit="return confirm('确定删除「{{ item_label(ct, item) }}」？{% if ct.tree %}子节点将提升为根节点。{% endif %}')">
+          <button type="submit" class="btn btn-delete" style="font-size:12px;padding:3px 10px;">删除</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" style="color:#888;">暂无数据</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

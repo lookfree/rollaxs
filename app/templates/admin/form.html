@@ -1,0 +1,170 @@
+{% extends "admin/base.html" %}
+{% from "admin/_i18n_tabs.html" import i18n_tabs %}
+
+{% block title %}{{ '编辑' if obj and obj.id else '新建' }}{{ ct.label }}{% endblock %}
+{% block page_title %}{{ '编辑' if obj and obj.id else '新建' }}{{ ct.label }}{% endblock %}
+
+{% block content %}
+{% if error %}<div class="login-error">{{ error }}</div>{% endif %}
+
+<form method="post" action="" class="content-form" style="max-width:860px;">
+  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:20px;margin-bottom:20px;">
+    {% for fname, widget in ct.plain_fields %}
+    {% set v = (obj | attr(fname)) if obj else none %}
+    <div class="form-row">
+      <label>{{ fname }}</label>
+      {% if widget == 'number' %}
+      <input type="number" name="{{ fname }}" id="fld-{{ fname }}" value="{{ v if v is not none else 0 }}">
+      {% elif widget == 'check' %}
+      <label style="font-weight:normal;"><input type="checkbox" name="{{ fname }}" value="1"
+        {% if (obj and v) or not obj %}checked{% endif %}> 启用</label>
+      {% elif widget == 'datetime' %}
+      <input type="datetime-local" name="{{ fname }}"
+             value="{{ v.strftime('%Y-%m-%dT%H:%M') if v else '' }}">
+      {% elif widget.startswith('select:') %}
+      <select name="{{ fname }}">
+        <option value="">——</option>
+        {% for val, label in options.get(fname, []) %}
+        <option value="{{ val }}" {% if v is not none and val == (v | string) %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% elif widget in ('image', 'file') %}
+      <div style="display:flex;gap:8px;">
+        <input type="text" name="{{ fname }}" id="fld-{{ fname }}" value="{{ v or '' }}"
+               placeholder="相对 uploads/ 的路径">
+        <button type="button" class="btn btn-cancel"
+                onclick="openPicker('fld-{{ fname }}', '{{ widget }}'{% if fname == 'file_path' %}, 'fld-file_size'{% endif %})">媒体库选择</button>
+      </div>
+      {% if widget == 'image' and v %}<img src="/uploads/{{ v }}" alt="" style="max-height:60px;margin-top:6px;border:1px solid #eee;">{% endif %}
+      {% else %}
+      <input type="text" name="{{ fname }}" id="fld-{{ fname }}" value="{{ v or '' }}">
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:20px;">
+    {{ i18n_tabs(ct, obj) }}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-save">保存</button>
+    <a class="btn btn-cancel" href="/admin/{{ ct.key }}">取消</a>
+  </div>
+</form>
+
+{# 媒体库选择弹窗 #}
+<div id="media-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;">
+  <div style="background:#fff;border-radius:6px;max-width:760px;margin:60px auto;padding:20px;max-height:75vh;overflow:auto;">
+    <div class="page-header">
+      <h2>媒体库</h2>
+      <div>
+        <label class="btn btn-save" style="cursor:pointer;font-size:12px;">
+          上传新文件<input type="file" id="picker-upload" style="display:none">
+        </label>
+        <button type="button" class="btn btn-cancel" onclick="closePicker()">关闭</button>
+      </div>
+    </div>
+    <div class="media-grid" id="picker-grid"></div>
+  </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+// ---- 语言 Tab 切换 ----
+document.querySelectorAll('.lang-tab').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.lang-tab').forEach(function (b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.lang-panel').forEach(function (p) {
+      p.classList.toggle('active', p.dataset.lang === btn.dataset.lang);
+    });
+  });
+});
+
+// ---- Quill 富文本 ----
+var editors = [];
+function quillImageHandler() {
+  var quill = this.quill;
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = function () {
+    var fd = new FormData(); fd.append('file', inp.files[0]);
+    fetch('/admin/media/upload', { method: 'POST', body: fd })
+      .then(function (r) { if (!r.ok) throw new Error('upload failed'); return r.json(); })
+      .then(function (data) {
+        var range = quill.getSelection(true);
+        quill.insertEmbed(range ? range.index : 0, 'image', data.url);
+      })
+      .catch(function () { alert('图片上传失败'); });
+  };
+  inp.click();
+}
+document.querySelectorAll('.quill-editor').forEach(function (div) {
+  var ta = document.querySelector('textarea[name="' + div.dataset.target + '"]');
+  var q = new Quill(div, {
+    theme: 'snow',
+    modules: {
+      toolbar: {
+        container: [
+          [{ header: [2, 3, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean']
+        ],
+        handlers: { image: quillImageHandler }
+      }
+    }
+  });
+  q.clipboard.dangerouslyPasteHTML(ta.value || '');
+  editors.push([q, ta]);
+});
+document.querySelector('.content-form').addEventListener('submit', function () {
+  editors.forEach(function (pair) { pair[1].value = pair[0].root.innerHTML; });
+});
+
+// ---- 媒体库选择弹窗 ----
+var pickerInput = null, pickerKind = 'image', pickerSizeInput = null;
+function openPicker(inputId, kind, sizeInputId) {
+  pickerInput = document.getElementById(inputId);
+  pickerKind = kind;
+  pickerSizeInput = sizeInputId ? document.getElementById(sizeInputId) : null;
+  document.getElementById('media-picker').style.display = 'block';
+  loadPicker();
+}
+function closePicker() { document.getElementById('media-picker').style.display = 'none'; }
+function pickItem(path, size) {
+  if (pickerInput) pickerInput.value = path;
+  if (pickerSizeInput) pickerSizeInput.value = size;
+  closePicker();
+}
+function loadPicker() {
+  fetch('/admin/media/list.json').then(function (r) { return r.json(); }).then(function (items) {
+    var grid = document.getElementById('picker-grid');
+    grid.innerHTML = '';
+    items.forEach(function (it) {
+      if (pickerKind === 'image' && it.kind !== 'image') return;
+      var card = document.createElement('div');
+      card.className = 'media-card';
+      card.style.cursor = 'pointer';
+      var thumb = it.kind === 'image'
+        ? '<img src="/uploads/' + (it.thumb_path || it.path) + '" loading="lazy">'
+        : '<div style="height:120px;display:flex;align-items:center;justify-content:center;background:#f7f8fa;font-size:32px;">&#128196;</div>';
+      card.innerHTML = thumb + '<div class="media-card-body"><p>' + it.path.split('/').pop() + '</p></div>';
+      card.addEventListener('click', function () { pickItem(it.path, it.size); });
+      grid.appendChild(card);
+    });
+    if (!items.length) grid.innerHTML = '<p style="color:#888;">媒体库为空,请先上传。</p>';
+  });
+}
+document.getElementById('picker-upload').addEventListener('change', function (e) {
+  if (!e.target.files.length) return;
+  var fd = new FormData(); fd.append('file', e.target.files[0]);
+  fetch('/admin/media/upload', { method: 'POST', body: fd })
+    .then(function (r) { if (!r.ok) throw new Error('upload failed'); return r.json(); })
+    .then(function () { loadPicker(); })
+    .catch(function () { alert('上传失败'); });
+});
+</script>
+{% endblock %}

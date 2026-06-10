@@ -1,0 +1,39 @@
+{# 多语言字段 Tab 宏:四个语言面板,rich 控件渲染 Quill 容器 + 隐藏 textarea #}
+{% macro i18n_tabs(ct, obj) %}
+<div class="lang-tabs" id="lang-tabs">
+  {% for code in LANGS %}
+  <button type="button" class="lang-tab{% if loop.first %} active{% endif %}" data-lang="{{ code }}">{{ LANG_NAMES[code] }}</button>
+  {% endfor %}
+</div>
+{% for code in LANGS %}
+<div class="lang-panel{% if loop.first %} active{% endif %}" data-lang="{{ code }}">
+  {% for fname, widget in ct.i18n_fields %}
+  {% set name = fname ~ '_' ~ code %}
+  {% set value = (obj | attr(name)) if obj else '' %}
+  <div class="form-row">
+    <label>{{ fname }}（{{ LANG_NAMES[code] }}）</label>
+    {% if widget == 'rich' %}
+    <div class="quill-editor" data-target="{{ name }}"></div>
+    <textarea name="{{ name }}" data-quill hidden>{{ value }}</textarea>
+    {% elif widget == 'textarea' %}
+    <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
+    {% else %}
+    <input type="text" name="{{ name }}" value="{{ value }}">
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% if ct.has_seo %}
+  <details class="seo-fields">
+    <summary>SEO（{{ LANG_NAMES[code] }}）</summary>
+    {% for sf in ['seo_title', 'seo_desc', 'seo_keywords'] %}
+    {% set name = sf ~ '_' ~ code %}
+    <div class="form-row">
+      <label>{{ sf }}</label>
+      <input type="text" name="{{ name }}" value="{{ (obj | attr(name)) if obj else '' }}">
+    </div>
+    {% endfor %}
+  </details>
+  {% endif %}
+</div>
+{% endfor %}
+{% endmacro %}
