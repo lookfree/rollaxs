@@ -311,3 +311,6 @@ main {
   background: var(--blue-600);
   margin-top: 0.4rem;
 }
+
+.hero--page{height:320px;position:relative;overflow:hidden;background:var(--blue-900)}
+.hero__img{width:100%;height:100%;object-fit:cover;opacity:.75}

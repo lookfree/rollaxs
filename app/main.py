@@ -50,8 +50,9 @@ def create_app():
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
     app.mount("/uploads", StaticFiles(directory=str(settings.uploads_dir)), name="uploads")
 
-    from app.routes.front import router as front_router
+    from app.routes.front import router as front_router, pages_router
     app.include_router(front_router)
+    app.include_router(pages_router)  # 页面树 catch-all,必须最后挂载
 
     @app.exception_handler(404)
     async def not_found(request: Request, exc):

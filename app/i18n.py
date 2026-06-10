@@ -23,6 +23,10 @@ UI = {
     "form.message": {"zh": "留言", "en": "Message", "de": "Nachricht", "jp": "メッセージ"},
     "msg.thanks": {"zh": "提交成功,我们会尽快联系您。", "en": "Thank you, we will contact you soon.",
                     "de": "Vielen Dank, wir melden uns in Kürze.", "jp": "送信しました。担当者よりご連絡いたします。"},
+    "label.404": {"zh": "页面未找到", "en": "Page not found",
+                   "de": "Seite nicht gefunden", "jp": "ページが見つかりません"},
+    "label.500": {"zh": "服务器内部错误", "en": "Internal Server Error",
+                   "de": "Interner Serverfehler", "jp": "サーバーエラー"},
 }
 # 执行时按模板实际用到的词条继续补充 UI 字典,保持同结构。
 
