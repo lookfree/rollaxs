@@ -1,0 +1,46 @@
+{% extends "front/base.html" %}
+{% from "front/_macros.html" import img, card %}
+
+{% block title %}{{ pick(page, 'title', lang) }} - {{ super() }}{% endblock %}
+
+{% block content %}
+{% if page.hero_image %}
+<div class="hero hero--page">
+  <img src="/uploads/{{ page.hero_image }}" alt="{{ pick(page, 'title', lang) }}" class="hero__img" loading="lazy">
+</div>
+{% endif %}
+
+<div class="page-content">
+  <!-- Breadcrumbs -->
+  {% if crumbs %}
+  <nav class="breadcrumbs" aria-label="breadcrumb">
+    <span><a href="{{ lang_url(lang, '/') }}">{{ t('label.breadcrumb_home', lang) }}</a></span>
+    {% for crumb_title, crumb_url in crumbs %}
+    <span><a href="{{ lang_url(lang, crumb_url) }}">{{ crumb_title }}</a></span>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <h1>{{ pick(page, 'title', lang) }}</h1>
+
+  <div class="page-body">
+    {{ pick(page, 'body', lang) | safe }}
+  </div>
+
+  <!-- Child pages as cards -->
+  {% if children %}
+  <div class="card-grid">
+    {% for child in children %}
+    <div class="card">
+      {% if child.hero_image %}
+      <img src="/uploads/{{ child.hero_image }}" alt="{{ pick(child, 'title', lang) }}" class="card__img" loading="lazy">
+      {% endif %}
+      <div class="card__body">
+        <h3><a href="{{ lang_url(lang, '/' + page.slug + '/' + child.slug + '/') }}">{{ pick(child, 'title', lang) }}</a></h3>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
