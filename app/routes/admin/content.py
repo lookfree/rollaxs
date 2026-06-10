@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.deps import get_db, require_admin
@@ -69,6 +70,7 @@ ENUM_OPTIONS = {
 }
 
 NULLABLE_FK_EMPTY = ("parent_id", "category_id")  # 空串 → None
+SAVE_ERROR = "保存失败:请检查必填关联字段与字段值。"
 
 
 def get_ct(key: str) -> ContentType:
@@ -228,7 +230,11 @@ async def create_item(key: str, request: Request, db: Session = Depends(get_db))
     obj = ct.model()
     apply_form(obj, ct, form)
     db.add(obj)
-    db.commit()
+    try:
+        db.commit()
+    except (IntegrityError, OperationalError):
+        db.rollback()
+        return _render_form(request, ct, obj, db, error=SAVE_ERROR)
     return _after_save(request, ct, db)
 
 
@@ -252,7 +258,11 @@ async def update_item(key: str, item_id: int, request: Request, db: Session = De
     if err:
         return _render_form(request, ct, obj, db, error=err)
     apply_form(obj, ct, form)
-    db.commit()
+    try:
+        db.commit()
+    except (IntegrityError, OperationalError):
+        db.rollback()
+        return _render_form(request, ct, obj, db, error=SAVE_ERROR)
     return _after_save(request, ct, db)
 
 
