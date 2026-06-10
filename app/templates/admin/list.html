@@ -30,7 +30,8 @@
       <td>
         <a class="btn btn-cancel" style="font-size:12px;padding:3px 10px;" href="/admin/{{ ct.key }}/{{ item.id }}">编辑</a>
         <form method="post" action="/admin/{{ ct.key }}/{{ item.id }}/delete" style="display:inline"
-              onsubmit="return confirm('确定删除「{{ item_label(ct, item) }}」？{% if ct.tree %}子节点将提升为根节点。{% endif %}')">
+              {# tojson 会把 ' < > & 转成 \uXXXX,配合单引号属性可安全注入任意标题 #}
+              onsubmit='return confirm({{ ("确定删除「" ~ item_label(ct, item) ~ "」？" ~ ("子节点将提升为根节点。" if ct.tree else "")) | tojson }})'>
           <button type="submit" class="btn btn-delete" style="font-size:12px;padding:3px 10px;">删除</button>
         </form>
       </td>

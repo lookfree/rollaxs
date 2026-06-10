@@ -117,6 +117,21 @@ def tree_rows(ct: ContentType, items):
     return rows
 
 
+def _descendant_ids(items, root_id) -> set:
+    """root_id 及其全部子孙 id;带 visited 防环,脏数据也不会死循环。"""
+    children: dict = {}
+    for it in items:
+        children.setdefault(it.parent_id, []).append(it)
+    ids, stack = {root_id}, [root_id]
+    while stack:
+        nid = stack.pop()
+        for child in children.get(nid, []):
+            if child.id not in ids:
+                ids.add(child.id)
+                stack.append(child.id)
+    return ids
+
+
 def build_options(ct: ContentType, db: Session, current_id=None):
     """为 select:xxx 控件准备选项 {字段名: [(value, label), ...]}。"""
     options = {}
@@ -127,15 +142,36 @@ def build_options(ct: ContentType, db: Session, current_id=None):
         if target in CONTENT_TYPES:
             ref = CONTENT_TYPES[target]
             items = _ordered_query(ref, db).all()
+            excluded = set()
+            if ref.key == ct.key and ref.tree and current_id is not None:
+                # 树形不能选自己或自己的子孙作父级(否则成环)
+                excluded = _descendant_ids(items, current_id)
             opts = []
             for it, depth in tree_rows(ref, items):
-                if ref.key == ct.key and current_id is not None and it.id == current_id:
-                    continue  # 树形不能选自己作父级
+                if it.id in excluded:
+                    continue
                 opts.append((str(it.id), "　" * depth + item_label(ref, it)))
             options[fname] = opts
         else:
             options[fname] = ENUM_OPTIONS.get(target, [])
     return options
+
+
+def parent_cycle_error(ct: ContentType, db: Session, obj):
+    """树形类型:沿新 parent_id 向上走,撞到自身或已访问节点即成环。"""
+    if not ct.tree:
+        return None
+    seen = {obj.id}
+    pid = obj.parent_id
+    while pid is not None:
+        if pid in seen:
+            return "不能选择自身或其子级作为父级"
+        seen.add(pid)
+        parent = db.get(ct.model, pid)
+        if parent is None:
+            break
+        pid = parent.parent_id
+    return None
 
 
 def slug_error(ct: ContentType, form, db: Session, exclude_id=None):
@@ -223,12 +259,13 @@ async def create_item(key: str, request: Request, db: Session = Depends(get_db))
     ct = get_ct(key)
     form = await request.form()
     err = slug_error(ct, form, db)
-    if err:
-        obj = ct.model()           # 不入库,仅用于回显
+    obj = ct.model()               # 先不入库,出错时仅用于回显
+    try:
         apply_form(obj, ct, form)
+    except ValueError:             # 非法数字/日期/外键等
+        err = err or SAVE_ERROR
+    if err:
         return _render_form(request, ct, obj, db, error=err)
-    obj = ct.model()
-    apply_form(obj, ct, form)
     db.add(obj)
     try:
         db.commit()
@@ -255,9 +292,18 @@ async def update_item(key: str, item_id: int, request: Request, db: Session = De
         raise HTTPException(status_code=404)
     form = await request.form()
     err = slug_error(ct, form, db, exclude_id=item_id)
+    try:
+        # 即便已有 slug 错误也先套用表单值(不提交),保证回显用户输入而非库里旧值
+        apply_form(obj, ct, form)
+    except ValueError:             # 非法数字/日期/外键等
+        err = err or SAVE_ERROR
+    if err is None:
+        err = parent_cycle_error(ct, db, obj)
     if err:
-        return _render_form(request, ct, obj, db, error=err)
-    apply_form(obj, ct, form)
+        with db.no_autoflush:      # 防止渲染期间把脏数据 flush 进库
+            resp = _render_form(request, ct, obj, db, error=err)
+        db.rollback()              # 渲染完成后丢弃未提交的修改
+        return resp
     try:
         db.commit()
     except (IntegrityError, OperationalError):

@@ -59,6 +59,67 @@ def test_subscribers_export(logged_client, db):
     assert "s@x.com" in logged_client.get("/admin/subscribers/export.csv").text
 
 
+def test_page_parent_cannot_be_self_or_descendant(logged_client, db):
+    logged_client.post("/admin/pages/new", data={"slug": "a", "title_zh": "甲", "sort": "0"})
+    a = db.query(Page).filter_by(slug="a").one()
+    logged_client.post("/admin/pages/new", data={
+        "slug": "b", "title_zh": "乙", "sort": "0", "parent_id": str(a.id)})
+    b = db.query(Page).filter_by(slug="b").one()
+    # 子级 b 不应出现在 a 的父级下拉中
+    form_html = logged_client.get(f"/admin/pages/{a.id}").text
+    assert f'value="{b.id}"' not in form_html
+    # 把 a 的父级设成它的子级 b → 报错回显且不落库
+    r = logged_client.post(f"/admin/pages/{a.id}", data={
+        "slug": "a", "title_zh": "甲", "sort": "0", "parent_id": str(b.id)})
+    assert r.status_code == 200
+    assert "不能选择自身或其子级作为父级" in r.text
+    db.expire_all()
+    assert db.get(Page, a.id).parent_id is None
+    # 设成自己同样被拒绝
+    r = logged_client.post(f"/admin/pages/{a.id}", data={
+        "slug": "a", "title_zh": "甲", "sort": "0", "parent_id": str(a.id)})
+    assert r.status_code == 200 and "不能选择自身或其子级作为父级" in r.text
+    db.expire_all()
+    assert db.get(Page, a.id).parent_id is None
+
+
+def test_create_with_invalid_number_echoes_error(logged_client, db):
+    r = logged_client.post("/admin/pages/new", data={
+        "slug": "x", "title_zh": "X", "sort": "abc"})
+    assert r.status_code == 200
+    assert "保存失败" in r.text
+    assert db.query(Page).count() == 0
+
+
+def test_update_with_invalid_value_echoes_user_input(logged_client, db):
+    logged_client.post("/admin/posts/new", data={
+        "slug": "n1", "title_zh": "新闻一", "status": "published",
+        "publish_at": "2026-06-10T08:00"})
+    pid = db.query(Post).filter_by(slug="n1").one().id
+    r = logged_client.post(f"/admin/posts/{pid}", data={
+        "slug": "n1", "title_zh": "新标题", "status": "published",
+        "publish_at": "garbage"})
+    assert r.status_code == 200
+    assert "保存失败" in r.text
+    assert "新标题" in r.text          # 回显用户输入而非库里旧值
+    db.expire_all()
+    assert db.get(Post, pid).title_zh == "新闻一"  # 未提交
+
+
+def test_inquiry_csv_formula_injection_escaped(logged_client, db):
+    db.add(Inquiry(name="=cmd()", email="a@x.com", company="+SUM(1)", message="@x")); db.commit()
+    body = logged_client.get("/admin/inquiries/export.csv").text
+    assert "'=cmd()" in body and ",=cmd()" not in body  # 单元格不再以 = 开头
+    assert "'+SUM(1)" in body
+    assert "'@x" in body
+
+
+def test_subscribers_csv_formula_injection_escaped(logged_client, db):
+    db.add(Subscriber(email="s@x.com", first_name="=HYPERLINK(1)")); db.commit()
+    body = logged_client.get("/admin/subscribers/export.csv").text
+    assert "'=HYPERLINK(1)" in body
+
+
 def test_settings_save(logged_client, db):
     logged_client.post("/admin/settings", data={"site_name": "我的公司", "phone": "+86 100",
                                                 "analytics_code": "<script>GA</script>"})

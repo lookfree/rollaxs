@@ -12,11 +12,18 @@ from app.models import Inquiry, Subscriber
 router = APIRouter(dependencies=[Depends(require_admin)])
 
 
+def _csv_safe(value):
+    """防 CSV 公式注入:以 = + - @ 或制表符开头的单元格前加单引号。"""
+    if isinstance(value, str) and value.startswith(("=", "+", "-", "@", "\t")):
+        return "'" + value
+    return value
+
+
 def _csv_response(filename: str, header: list, rows) -> Response:
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(header)
-    writer.writerows(rows)
+    writer.writerows([_csv_safe(cell) for cell in row] for row in rows)
     # UTF-8 BOM,让 Excel 正确识别中文
     return Response(
         content="\ufeff" + buf.getvalue(),

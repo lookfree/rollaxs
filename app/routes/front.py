@@ -50,8 +50,11 @@ def render(request: Request, name: str, ctx: dict, db: Session, status_code: int
 def build_page_crumbs(db: Session, node: Page, lang: str) -> list:
     """Walk parent_id chain upward; return list of (title, url) tuples top-down."""
     crumbs = []
-    current = node
+    current, seen = node, set()
     while current is not None:
+        if current.id in seen:  # 防御:数据成环时中断,避免死循环
+            break
+        seen.add(current.id)
         crumbs.append(current)
         if current.parent_id is None:
             break
@@ -83,8 +86,11 @@ def category_tree(db: Session) -> dict:
 def cat_url_path(db: Session, cat: ProductCategory) -> str:
     """Return the canonical URL path for a category, e.g. /products/new-mobility/nvh-bearings/"""
     parts = []
-    current = cat
+    current, seen = cat, set()
     while current is not None:
+        if current.id in seen:  # 防御:数据成环时中断,避免死循环
+            break
+        seen.add(current.id)
         parts.append(current.slug)
         if current.parent_id is None:
             break
@@ -104,8 +110,11 @@ def cat_url_by_id(db: Session, category_id: int) -> str:
 def build_cat_crumbs(db: Session, cat: ProductCategory, lang: str) -> list:
     """Return list of (name, url) tuples from root down to cat."""
     crumbs = []
-    current = cat
+    current, seen = cat, set()
     while current is not None:
+        if current.id in seen:  # 防御:数据成环时中断,避免死循环
+            break
+        seen.add(current.id)
         crumbs.append(current)
         if current.parent_id is None:
             break
@@ -136,8 +145,11 @@ def flatten_category_tree(db: Session) -> list:
 def page_url(db: Session, page: Page) -> str:
     """Build the canonical URL for a page by walking its parent chain."""
     parts = []
-    current = page
+    current, seen = page, set()
     while current is not None:
+        if current.id in seen:  # 防御:数据成环时中断,避免死循环
+            break
+        seen.add(current.id)
         parts.append(current.slug)
         if current.parent_id is None:
             break
@@ -357,8 +369,11 @@ def sitemap(request: Request, db: Session = Depends(get_db)):
     pages = db.query(Page).all()
     page_by_id = {p.id: p for p in pages}
     for pg in pages:
-        parts, cur = [], pg
+        parts, cur, seen = [], pg, set()
         while cur is not None:
+            if cur.id in seen:  # 防御:数据成环时中断,避免死循环
+                break
+            seen.add(cur.id)
             parts.append(cur.slug)
             cur = page_by_id.get(cur.parent_id) if cur.parent_id else None
         add_url("/" + "/".join(reversed(parts)) + "/")
