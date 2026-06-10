@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block title %}媒体库{% endblock %}
+{% block page_title %}媒体库{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>媒体库（共 {{ total }} 项）</h2>
+  <div>
+    <label class="btn btn-save" style="cursor:pointer">
+      上传文件
+      <input type="file" id="upload-input" style="display:none" multiple>
+    </label>
+  </div>
+</div>
+
+<div id="upload-status"></div>
+
+<div class="media-grid" id="media-grid">
+  {% for item in items %}
+  <div class="media-card" id="media-{{ item.id }}">
+    {% if item.kind == "image" %}
+      {% if item.thumb_path %}
+        <img src="/uploads/{{ item.thumb_path }}" alt="{{ item.path }}" loading="lazy">
+      {% else %}
+        <img src="/uploads/{{ item.path }}" alt="{{ item.path }}" loading="lazy" style="height:120px;object-fit:cover;">
+      {% endif %}
+    {% else %}
+      <div style="height:120px;display:flex;align-items:center;justify-content:center;background:#f7f8fa;font-size:32px;">📄</div>
+    {% endif %}
+    <div class="media-card-body">
+      <p title="{{ item.path }}">{{ item.path.split('/')[-1] }}</p>
+      <div style="margin-top:6px;display:flex;gap:6px;">
+        <a href="/uploads/{{ item.path }}" target="_blank" class="btn btn-cancel" style="font-size:11px;padding:2px 8px;">查看</a>
+        <button class="btn btn-delete" style="font-size:11px;padding:2px 8px;"
+          hx-delete="/admin/media/{{ item.id }}"
+          hx-confirm="确定删除？"
+          hx-target="#media-{{ item.id }}"
+          hx-swap="outerHTML">删除</button>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p style="color:#888;">暂无媒体文件</p>
+  {% endfor %}
+</div>
+
+{% if pages > 1 %}
+<div class="pagination">
+  {% for p in range(1, pages + 1) %}
+    {% if p == page %}
+      <span class="current">{{ p }}</span>
+    {% else %}
+      <a href="/admin/media?page={{ p }}">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<script>
+document.getElementById('upload-input').addEventListener('change', async function(e) {
+  const files = e.target.files;
+  const status = document.getElementById('upload-status');
+  status.textContent = '上传中...';
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch('/admin/media/upload', { method: 'POST', body: fd });
+      if (!r.ok) {
+        const msg = await r.text();
+        status.textContent = '上传失败: ' + msg;
+        return;
+      }
+    } catch (err) {
+      status.textContent = '上传出错: ' + err;
+      return;
+    }
+  }
+  status.textContent = '上传完成，刷新查看...';
+  setTimeout(() => location.reload(), 800);
+});
+</script>
+{% endblock %}
