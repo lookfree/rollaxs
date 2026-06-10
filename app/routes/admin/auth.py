@@ -3,9 +3,12 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.models import AdminUser
-from app.security import verify_password
+from app.security import verify_password, hash_password
 
 router = APIRouter()
+
+# 未知用户名也跑一次 bcrypt,避免时序侧信道暴露用户名是否存在
+_DUMMY_HASH = hash_password("dummy-timing-pad")
 
 
 def _templates(request: Request):
@@ -32,13 +35,15 @@ async def login_post(request: Request, db: Session = Depends(get_db)):
         return HTMLResponse("Too Many Requests", status_code=429)
 
     user = db.query(AdminUser).filter_by(username=username).first()
-    if not user or not verify_password(password, user.password_hash):
+    ok = verify_password(password, user.password_hash if user else _DUMMY_HASH)
+    if not user or not ok:
         return _templates(request).TemplateResponse(
             request, "admin/login.html",
             {"error": "用户名或密码错误"},
             status_code=200,
         )
 
+    request.session.clear()
     request.session["admin_id"] = user.id
     return RedirectResponse("/admin/", status_code=303)
 

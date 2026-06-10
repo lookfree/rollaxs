@@ -28,7 +28,11 @@ def save_upload(uploads_dir: Path, filename: str, data: bytes):
     thumb_rel = webp_rel = ""
 
     if kind == "image" and ext != ".gif":
-        img = Image.open(abs_path).convert("RGB")
+        try:
+            img = Image.open(abs_path).convert("RGB")
+        except Exception as e:  # 损坏图片/解压炸弹按非法输入处理
+            abs_path.unlink(missing_ok=True)
+            raise ValueError(f"无法解析的图片: {e}")
 
         t = img.copy()
         t.thumbnail((400, 400))

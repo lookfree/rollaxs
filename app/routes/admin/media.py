@@ -59,10 +59,13 @@ def delete_media(media_id: int, request: Request, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Not found")
 
     uploads_dir: Path = request.app.state.settings.uploads_dir
+    root = uploads_dir.resolve()
     for rel_path in [media.path, media.thumb_path, media.webp_path]:
         if rel_path:
             try:
-                (uploads_dir / rel_path).unlink(missing_ok=True)
+                target = (uploads_dir / rel_path).resolve()
+                if target.is_relative_to(root):  # 防止 DB 中异常路径删到 uploads 之外
+                    target.unlink(missing_ok=True)
             except Exception:
                 pass
 
