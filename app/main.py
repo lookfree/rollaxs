@@ -12,7 +12,7 @@ NON_LANG_PREFIXES = ("/admin", "/static", "/uploads", "/healthz")
 
 def create_app():
     settings = get_settings()
-    app = FastAPI(docs_url=None, redoc_url=None)
+    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.settings = settings
 
     engine = make_engine(settings.db_path)

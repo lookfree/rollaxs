@@ -36,7 +36,11 @@
       "Bash(DB_PATH=data/site.db .venv/bin/uvicorn app.main:app --port 8765)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8765/products/new-mobility/)",
       "Bash(lsof -ti:8765)",
-      "Bash(xargs kill)"
+      "Bash(xargs kill)",
+      "Bash(docker compose *)",
+      "Bash(docker-compose version *)",
+      "Bash(chmod +x /Users/wuhoujin/Documents/projects/rollax/scripts/backup.sh)",
+      "Bash(docker --version)"
     ]
   }
 }
